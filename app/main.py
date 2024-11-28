@@ -7,19 +7,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import Settings
-from app.core.exceptions import AuthException
+from app.core.exceptions import AuthException  # Se `AuthException` è legato solo all'autenticazione, puoi rimuoverlo
 from app.core.rabbitmq_client import RabbitMQClient
 from app.core.logging_config import init_logging, test_connection
-from app.routers.auth_router import router as auth_router
 from app.routers.resume_ingestor_router import router as resume_router
 
-# Initialize settings
+# Inizializza le impostazioni
 settings = Settings()
 
-# Test connection first
+# Testa la connessione prima
 test_connection(settings.syslog_host, settings.syslog_port)
 
-# Initialize logger
+# Inizializza il logger
 logger = init_logging(settings)
 
 def message_callback(ch, method, properties, body):
@@ -34,7 +33,7 @@ def message_callback(ch, method, properties, body):
         }
     )
 
-# Global instance of RabbitMQClient
+# Istanza globale di RabbitMQClient
 rabbit_client = RabbitMQClient(
     rabbitmq_url=settings.rabbitmq_url,
     queue="my_queue",
@@ -43,8 +42,8 @@ rabbit_client = RabbitMQClient(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan context manager for FastAPI application."""
-    # Startup
+    """Lifespan context manager per l'applicazione FastAPI."""
+    # Avvio
     rabbit_thread = Thread(target=rabbit_client.start)
     rabbit_thread.start()
     logger.info(
@@ -58,7 +57,7 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # Shutdown
+    # Arresto
     rabbit_client.stop()
     rabbit_thread.join()
     logger.info(
@@ -70,15 +69,15 @@ async def lifespan(app: FastAPI):
         }
     )
 
-# Initialize FastAPI app
+# Inizializza l'app FastAPI
 app = FastAPI(
-    title="Auth Service API",
-    description="Authentication service",
+    title="Resume Ingestor API",
+    description="Service per l'ingestione dei resume",
     version="1.0.0",
     lifespan=lifespan
 )
 
-# Log application startup
+# Log dell'avvio dell'applicazione
 logger.info(
     "Initializing application",
     extra={
@@ -88,7 +87,7 @@ logger.info(
     }
 )
 
-# Configure CORS middleware
+# Configura il middleware CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -101,7 +100,7 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    """Root endpoint that returns service status"""
+    """Endpoint root che restituisce lo stato del servizio"""
     logger.debug(
         "Root endpoint accessed",
         extra={
@@ -110,10 +109,9 @@ async def root():
             "method": "GET"
         }
     )
-    return {"message": "authService is up and running!"}
+    return {"message": "ResumeIngestor Service is up and running!"}
 
-# Include routers
-app.include_router(auth_router, prefix="/auth")
+# Includi solo il router per l'ingestione dei resume
 app.include_router(resume_router)
 
 @app.exception_handler(RequestValidationError)
@@ -136,26 +134,10 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         }
     )
 
-@app.exception_handler(AuthException)
-async def auth_exception_handler(request: Request, exc: AuthException) -> JSONResponse:
-    logger.error(
-        "Authentication error",
-        extra={
-            "event_type": "auth_error",
-            "error_details": exc.detail,
-            "status_code": exc.status_code,
-            "endpoint": request.url.path,
-            "method": request.method
-        }
-    )
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=exc.detail
-    )
 
 @app.get("/test-log")
 async def test_log():
-    """Test endpoint for logging"""
+    """Endpoint di test per il logging"""
     logger.info(
         "Test log message",
         extra={

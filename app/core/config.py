@@ -22,9 +22,6 @@ class Settings(BaseSettings):
     # RabbitMQ settings
     rabbitmq_url: str = "amqp://guest:guest@localhost:5672/"
 
-    # Database settings
-    database_url: str = "postgresql+asyncpg://testuser:testpassword@localhost:5432/main_db"
-    test_database_url: str = "postgresql+asyncpg://testuser:testpassword@localhost:5432/test_db"
 
     # MongoDB settings
     mongodb_host: str = "localhost"
@@ -34,10 +31,6 @@ class Settings(BaseSettings):
     mongodb_database: str = "main_db"
     mongodb_auth_source: str = "main_db"
 
-    # Authentication settings
-    secret_key: str = "your-secret-key-here"
-    algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
 
     # Construct MongoDB URI with auth source
     @property
