@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Dict, Any, Optional, Union
 import json
-from pydantic import BaseModel, EmailStr, HttpUrl, Field
+from pydantic import BaseModel, EmailStr, AnyUrl, Field, field_serializer
+from pydantic_core import Url
 
 class PersonalInformation(BaseModel):
     name: Optional[str]
@@ -14,8 +15,14 @@ class PersonalInformation(BaseModel):
     phone_prefix: Optional[str]
     phone: Optional[str]
     email: Optional[EmailStr]
-    github: Optional[HttpUrl] = None
-    linkedin: Optional[HttpUrl] = None
+    github: Optional[AnyUrl] = None
+    linkedin: Optional[AnyUrl] = None
+
+    @field_serializer('github', 'linkedin')
+    def url2str(self, val) -> str:
+        if isinstance(val, Url):
+            return str(val)
+        return val
 
 class EducationDetails(BaseModel):
     education_level: Optional[str]
@@ -38,7 +45,13 @@ class ExperienceDetails(BaseModel):
 class Project(BaseModel):
     name: Optional[str]
     description: Optional[str]
-    link: Optional[HttpUrl] = None
+    link: Optional[AnyUrl] = None
+
+    @field_serializer('link')
+    def url2str(self, val) -> str:
+        if isinstance(val, Url):
+            return str(val)
+        return val
 
 class Achievement(BaseModel):
     name: Optional[str]
@@ -92,6 +105,7 @@ class LegalAuthorization(BaseModel):
     requires_uk_sponsorship: Optional[str]
 
 class Resume(BaseModel):
+    user_id: Optional[int] = None
     personal_information: Optional[PersonalInformation]
     education_details: Optional[List[EducationDetails]] = None
     experience_details: Optional[List[ExperienceDetails]] = None
@@ -105,6 +119,7 @@ class Resume(BaseModel):
     work_preferences: Optional[WorkPreferences] = None
     availability: Optional[Availability] = None
     salary_expectations: Optional[SalaryExpectations] = None
+
 
 @dataclass
 class Exam:

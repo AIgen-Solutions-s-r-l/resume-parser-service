@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     mongodb_port: int = 27017
     mongodb_username: str = "appUser"
     mongodb_password: str = "password123"
-    mongodb_database: str = "main_db"
+    mongodb_database: str = "resumes"
     mongodb_auth_source: str = "main_db"
 
     # Authentication settings

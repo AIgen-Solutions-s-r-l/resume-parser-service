@@ -1,4 +1,5 @@
 from typing import Dict, Any, Optional
+from app.schemas.resume import Resume
 from pymongo.errors import DuplicateKeyError
 from app.core.mongodb import collection_name
 from app.core.logging_config import LogConfig
@@ -44,10 +45,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
-async def add_resume(resume: Dict[str, Any], current_user) -> Dict[str, Any]:
+async def add_resume(resume: Resume, current_user: int) -> Dict[str, Any]:
     try:
-        # Verifica se current_user è un intero
+        # Ensure current_user is an integer
         if not isinstance(current_user, int):
             try:
                 current_user = int(current_user)
@@ -56,9 +56,9 @@ async def add_resume(resume: Dict[str, Any], current_user) -> Dict[str, Any]:
                     "event_type": "resume_validation_error",
                     "user_id": current_user
                 })
-                return {"error": f"Invalid user ID format: {resume.get('user_id')}. Must be an integer."}
+                return {"error": f"Invalid user ID format: {current_user}. Must be an integer."}
 
-        # Verifica se esiste già un resume per lo user_id fornito
+        # Check if a resume already exists for the provided user_id
         existing_resume = await collection_name.find_one({"user_id": current_user})
         if existing_resume:
             logger.warning("Resume already exists", extra={
@@ -67,21 +67,21 @@ async def add_resume(resume: Dict[str, Any], current_user) -> Dict[str, Any]:
             })
             return {"error": f"Resume already exists for user ID: {current_user}"}
 
-        # Aggiungi esplicitamente il campo user_id al documento resume
-        resume["user_id"] = current_user
+        # Explicitly add the user_id field to the resume document
+        resume.user_id = current_user
 
-        # Inserisci il documento nel database
-        result = await collection_name.insert_one(resume)
-        inserted_resume = await collection_name.find_one({"_id": result.inserted_id})
-
-        if inserted_resume:
-            # Converte l'ObjectId in stringa per il client
-            inserted_resume["_id"] = str(inserted_resume["_id"])
-            logger.info("Resume created", extra={
-                "event_type": "resume_created",
-                "user_id": current_user
-            })
-            return inserted_resume
+        # Insert the document into the database
+        result = await collection_name.insert_one(resume.model_dump())
+        if result.inserted_id:
+            inserted_resume = await collection_name.find_one({"_id": result.inserted_id})
+            if inserted_resume:
+                # Convert the ObjectId to string for the client
+                inserted_resume["_id"] = str(inserted_resume["_id"])
+                logger.info("Resume created", extra={
+                    "event_type": "resume_created",
+                    "user_id": current_user
+                })
+                return inserted_resume
 
         logger.error("Resume insertion failed", extra={
             "event_type": "resume_creation_error",
@@ -94,9 +94,6 @@ async def add_resume(resume: Dict[str, Any], current_user) -> Dict[str, Any]:
             "user_id": current_user
         })
         return {"error": f"Unexpected error: {str(e)}"}
-
-
-
 
 async def update_resume(user_id: int, resume_data: Dict[str, Any]) -> Dict[str, Any]:
     try:
