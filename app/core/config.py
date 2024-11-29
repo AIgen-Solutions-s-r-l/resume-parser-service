@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     rabbitmq_url: str = "amqp://guest:guest@localhost:5672/"
 
 
+
     # MongoDB settings
     mongodb_host: str = "localhost"
     mongodb_port: int = 27017
@@ -31,6 +32,10 @@ class Settings(BaseSettings):
     mongodb_database: str = "main_db"
     mongodb_auth_source: str = "main_db"
 
+    # Authentication settings
+    secret_key: str = "your-secret-key-here"
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
 
     # Construct MongoDB URI with auth source
     @property

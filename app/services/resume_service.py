@@ -39,15 +39,15 @@ async def get_resume_by_user_id(user_id: int, version: Optional[str] = None) -> 
         return {"error": f"Error retrieving resume: {str(e)}"}
 
 
-async def add_resume(resume: Dict[str, Any]) -> Dict[str, Any]:
+async def add_resume(resume: Dict[str, Any], current_user) -> Dict[str, Any]:
     try:
-        if isinstance(resume.get("user_id"), str):
+        if isinstance(current_user, int):
             try:
                 resume["user_id"] = int(resume["user_id"])
             except ValueError:
                 logger.error("Invalid user ID format", extra={
                     "event_type": "resume_validation_error",
-                    "user_id": resume.get("user_id")
+                    "user_id": current_user
                 })
                 return {"error": f"Invalid user ID format: {resume.get('user_id')}. Must be an integer."}
 
@@ -79,13 +79,13 @@ async def add_resume(resume: Dict[str, Any]) -> Dict[str, Any]:
     except DuplicateKeyError:
         logger.error("Duplicate resume", extra={
             "event_type": "resume_duplicate_error",
-            "user_id": resume.get("user_id")
+            "user_id": current_user
         })
         return {"error": f"Resume already exists for user ID: {resume.get('user_id')}"}
     except Exception as e:
         logger.error("Resume creation error", extra={
             "event_type": "resume_creation_error",
-            "user_id": resume.get("user_id"),
+            "user_id": current_user,
             "error_type": type(e).__name__,
             "error_details": str(e)
         })

@@ -1,208 +1,116 @@
-# app/schemas/resume.py
-from typing import Dict, List, Optional, Any
-
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
-
+from dataclasses import dataclass
+from typing import List, Dict, Any, Optional, Union
+import json
+from pydantic import BaseModel, EmailStr, HttpUrl, Field
 
 class PersonalInformation(BaseModel):
-    name: str
-    surname: str
-    date_of_birth: str
-    country: str
-    city: str
-    address: str
-    phone_prefix: str
-    phone: str
-    email: EmailStr
-    github: str
-    linkedin: str
+    name: Optional[str]
+    surname: Optional[str]
+    date_of_birth: Optional[str]
+    country: Optional[str]
+    city: Optional[str]
+    address: Optional[str]
+    zip_code: Optional[str] = Field(None, min_length=5, max_length=10)
+    phone_prefix: Optional[str]
+    phone: Optional[str]
+    email: Optional[EmailStr]
+    github: Optional[HttpUrl] = None
+    linkedin: Optional[HttpUrl] = None
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+class EducationDetails(BaseModel):
+    education_level: Optional[str]
+    institution: Optional[str]
+    field_of_study: Optional[str]
+    final_evaluation_grade: Optional[str]
+    start_date: Optional[str]
+    year_of_completion: Optional[Union[int, str]]
+    exam: Optional[Union[List[Dict[str, str]], Dict[str, str]]] = None
 
-
-class Exam(BaseModel):
-    course_name: str
-    grade: str
-
-
-class Education(BaseModel):
-    education_level: str
-    institution: str
-    field_of_study: str
-    final_evaluation_grade: str
-    start_date: str
-    year_of_completion: str
-    exam: Dict[str, str]
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-
-class Experience(BaseModel):
-    position: str
-    company: str
-    employment_period: str
-    location: str
-    industry: str
-    key_responsibilities: List[str]
-    skills_acquired: List[str]
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+class ExperienceDetails(BaseModel):
+    position: Optional[str]
+    company: Optional[str]
+    employment_period: Optional[str]
+    location: Optional[str]
+    industry: Optional[str]
+    key_responsibilities: Optional[List[str]] = None
+    skills_acquired: Optional[List[str]] = None
 
 class Project(BaseModel):
-    name: str
-    description: str
-    link: str
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+    name: Optional[str]
+    description: Optional[str]
+    link: Optional[HttpUrl] = None
 
 class Achievement(BaseModel):
-    name: str
-    description: str
+    name: Optional[str]
+    description: Optional[str]
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-
-class Certification(BaseModel):
-    name: str
-    description: str
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+class Certifications(BaseModel):
+    name: Optional[str]
+    description: Optional[str]
 
 class Language(BaseModel):
-    language: str
-    proficiency: str
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+    language: Optional[str]
+    proficiency: Optional[str]
 
 class Availability(BaseModel):
-    notice_period: str
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+    notice_period: Optional[str]
 
 class SalaryExpectations(BaseModel):
-    salary_range_usd: str
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+    salary_range_usd: Optional[str]
 
 class SelfIdentification(BaseModel):
-    gender: str
-    pronouns: str
-    veteran: bool
-    disability: bool
-    ethnicity: str
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-
-class WorkAuthorization(BaseModel):
-    eu_work_authorization: bool
-    us_work_authorization: bool
-    requires_us_visa: bool
-    requires_us_sponsorship: bool
-    requires_eu_visa: bool
-    legally_allowed_to_work_in_eu: bool
-    legally_allowed_to_work_in_us: bool
-    requires_eu_sponsorship: bool
-    canada_work_authorization: bool
-    requires_canada_visa: bool
-    legally_allowed_to_work_in_canada: bool
-    requires_canada_sponsorship: bool
-    uk_work_authorization: bool
-    requires_uk_visa: bool
-    legally_allowed_to_work_in_uk: bool
-    requires_uk_sponsorship: bool
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+    gender: Optional[str]
+    pronouns: Optional[str]
+    veteran: Optional[str]
+    disability: Optional[str]
+    ethnicity: Optional[str]
 
 class WorkPreferences(BaseModel):
-    remote_work: bool
-    in_person_work: bool
-    open_to_relocation: bool
-    willing_to_complete_assessments: bool
-    willing_to_undergo_drug_tests: bool
-    willing_to_undergo_background_checks: bool
+    remote_work: Optional[str]
+    in_person_work: Optional[str]
+    open_to_relocation: Optional[str]
+    willing_to_complete_assessments: Optional[str]
+    willing_to_undergo_drug_tests: Optional[str]
+    willing_to_undergo_background_checks: Optional[str]
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
+class LegalAuthorization(BaseModel):
+    eu_work_authorization: Optional[str]
+    us_work_authorization: Optional[str]
+    requires_us_visa: Optional[str]
+    legally_allowed_to_work_in_us: Optional[str]
+    requires_us_sponsorship: Optional[str]
+    requires_eu_visa: Optional[str]
+    legally_allowed_to_work_in_eu: Optional[str]
+    requires_eu_sponsorship: Optional[str]
+    canada_work_authorization: Optional[str]
+    requires_canada_visa: Optional[str]
+    legally_allowed_to_work_in_canada: Optional[str]
+    requires_canada_sponsorship: Optional[str]
+    uk_work_authorization: Optional[str]
+    requires_uk_visa: Optional[str]
+    legally_allowed_to_work_in_uk: Optional[str]
+    requires_uk_sponsorship: Optional[str]
 
 class Resume(BaseModel):
-    user_id: int = Field(gt=0, description="The ID of the user who owns the resume")
-    personal_information: PersonalInformation
-    # Make all other fields optional with default empty lists/values
-    education_details: Optional[List[Education]] = Field(default_factory=list)
-    experience_details: Optional[List[Experience]] = Field(default_factory=list)
-    projects: Optional[List[Project]] = Field(default_factory=list)
-    achievements: Optional[List[Achievement]] = Field(default_factory=list)
-    certifications: Optional[List[Certification]] = Field(default_factory=list)
-    languages: Optional[List[Language]] = Field(default_factory=list)
-    interests: Optional[List[str]] = Field(default_factory=list)
+    personal_information: Optional[PersonalInformation]
+    education_details: Optional[List[EducationDetails]] = None
+    experience_details: Optional[List[ExperienceDetails]] = None
+    projects: Optional[List[Project]] = None
+    achievements: Optional[List[Achievement]] = None
+    certifications: Optional[List[Certifications]] = None
+    languages: Optional[List[Language]] = None
+    interests: Optional[List[str]] = None
+    self_identification: Optional[SelfIdentification] = None
+    legal_authorization: Optional[LegalAuthorization] = None
+    work_preferences: Optional[WorkPreferences] = None
     availability: Optional[Availability] = None
     salary_expectations: Optional[SalaryExpectations] = None
-    self_identification: Optional[SelfIdentification] = None
-    legal_authorization: Optional[WorkAuthorization] = None
-    work_preferences: Optional[WorkPreferences] = None
 
-    model_config = ConfigDict(arbitrary_types_allowed=True)
+@dataclass
+class Exam:
+    name: str
+    grade: str
 
-
-class ResumeRequest(BaseModel):
-    """Schema for resume creation/update request."""
-    user_id: int = Field(gt=0, description="The ID of the user who owns the resume")
-    personal_information: PersonalInformation = Field(..., description="Personal and contact information")
-
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "user_id": 123,
-                "personal_information": {
-                    "name": "John",
-                    "surname": "Doe",
-                    "date_of_birth": "1990-01-01",
-                    "country": "USA",
-                    "city": "New York",
-                    "address": "123 Main St",
-                    "phone_prefix": "+1",
-                    "phone": "555-0123",
-                    "email": "john.doe@example.com",
-                    "github": "github.com/johndoe",
-                    "linkedin": "linkedin.com/in/johndoe"
-                }
-            }
-        }
-    )
-
-
-class ResumeResponse(BaseModel):
-    """Schema for resume response."""
-    message: str
-    data: Optional[Dict[str, Any]] = None
-
-    model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "message": "Resume retrieved successfully",
-                "data": {
-                    "personal_information": {
-                        "name": "John",
-                        "surname": "Doe",
-                        "email": "john.doe@example.com",
-                        "date_of_birth": "1990-01-01",
-                        "country": "USA",
-                        "city": "New York",
-                        "address": "123 Main St",
-                        "phone_prefix": "+1",
-                        "phone": "555-0123",
-                        "github": "github.com/johndoe",
-                        "linkedin": "linkedin.com/in/johndoe"
-                    }
-                }
-            }
-        }
-    )
+@dataclass
+class Responsibility:
+    description: str
