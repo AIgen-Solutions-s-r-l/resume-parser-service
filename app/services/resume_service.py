@@ -39,11 +39,18 @@ async def get_resume_by_user_id(user_id: int, version: Optional[str] = None) -> 
         return {"error": f"Error retrieving resume: {str(e)}"}
 
 
+from typing import Dict, Any
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 async def add_resume(resume: Dict[str, Any], current_user) -> Dict[str, Any]:
     try:
-        if isinstance(current_user, int):
+        # Verifica se current_user è un intero
+        if not isinstance(current_user, int):
             try:
-                resume["user_id"] = int(resume["user_id"])
+                current_user = int(current_user)
             except ValueError:
                 logger.error("Invalid user ID format", extra={
                     "event_type": "resume_validation_error",
@@ -51,45 +58,44 @@ async def add_resume(resume: Dict[str, Any], current_user) -> Dict[str, Any]:
                 })
                 return {"error": f"Invalid user ID format: {resume.get('user_id')}. Must be an integer."}
 
-        existing_resume = await collection_name.find_one({"user_id": resume["user_id"]})
+        # Verifica se esiste già un resume per lo user_id fornito
+        existing_resume = await collection_name.find_one({"user_id": current_user})
         if existing_resume:
             logger.warning("Resume already exists", extra={
                 "event_type": "resume_duplicate",
-                "user_id": resume["user_id"]
+                "user_id": current_user
             })
-            return {"error": f"Resume already exists for user ID: {resume['user_id']}"}
+            return {"error": f"Resume already exists for user ID: {current_user}"}
 
+        # Aggiungi esplicitamente il campo user_id al documento resume
+        resume["user_id"] = current_user
+
+        # Inserisci il documento nel database
         result = await collection_name.insert_one(resume)
         inserted_resume = await collection_name.find_one({"_id": result.inserted_id})
 
         if inserted_resume:
+            # Converte l'ObjectId in stringa per il client
             inserted_resume["_id"] = str(inserted_resume["_id"])
             logger.info("Resume created", extra={
                 "event_type": "resume_created",
-                "user_id": resume["user_id"]
+                "user_id": current_user
             })
             return inserted_resume
 
         logger.error("Resume insertion failed", extra={
             "event_type": "resume_creation_error",
-            "user_id": resume["user_id"]
-        })
-        return {"error": "Failed to retrieve inserted resume"}
-
-    except DuplicateKeyError:
-        logger.error("Duplicate resume", extra={
-            "event_type": "resume_duplicate_error",
             "user_id": current_user
         })
-        return {"error": f"Resume already exists for user ID: {resume.get('user_id')}"}
+        return {"error": "Failed to retrieve inserted resume"}
     except Exception as e:
-        logger.error("Resume creation error", extra={
+        logger.error(f"Unexpected error: {str(e)}", extra={
             "event_type": "resume_creation_error",
-            "user_id": current_user,
-            "error_type": type(e).__name__,
-            "error_details": str(e)
+            "user_id": current_user
         })
-        return {"error": f"Error adding resume: {str(e)}"}
+        return {"error": f"Unexpected error: {str(e)}"}
+
+
 
 
 async def update_resume(user_id: int, resume_data: Dict[str, Any]) -> Dict[str, Any]:
