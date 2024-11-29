@@ -1,7 +1,5 @@
-from dataclasses import dataclass
-from typing import List, Dict, Any, Optional, Union
-import json
 from pydantic import BaseModel, EmailStr, AnyUrl, Field, field_serializer
+from typing import Optional, List, Dict, Union
 from pydantic_core import Url
 
 class PersonalInformation(BaseModel):
@@ -24,6 +22,8 @@ class PersonalInformation(BaseModel):
             return str(val)
         return val
 
+
+
 class EducationDetails(BaseModel):
     education_level: Optional[str]
     institution: Optional[str]
@@ -33,6 +33,8 @@ class EducationDetails(BaseModel):
     year_of_completion: Optional[Union[int, str]]
     exam: Optional[Union[List[Dict[str, str]], Dict[str, str]]] = None
 
+
+
 class ExperienceDetails(BaseModel):
     position: Optional[str]
     company: Optional[str]
@@ -41,6 +43,8 @@ class ExperienceDetails(BaseModel):
     industry: Optional[str]
     key_responsibilities: Optional[List[str]] = None
     skills_acquired: Optional[List[str]] = None
+
+
 
 class Project(BaseModel):
     name: Optional[str]
@@ -53,23 +57,35 @@ class Project(BaseModel):
             return str(val)
         return val
 
+
+
 class Achievement(BaseModel):
     name: Optional[str]
     description: Optional[str]
 
-class Certifications(BaseModel):
+
+
+class Certification(BaseModel):
     name: Optional[str]
     description: Optional[str]
+
+
 
 class Language(BaseModel):
     language: Optional[str]
     proficiency: Optional[str]
 
+
+
 class Availability(BaseModel):
     notice_period: Optional[str]
 
+
+
 class SalaryExpectations(BaseModel):
     salary_range_usd: Optional[str]
+
+
 
 class SelfIdentification(BaseModel):
     gender: Optional[str]
@@ -78,6 +94,8 @@ class SelfIdentification(BaseModel):
     disability: Optional[str]
     ethnicity: Optional[str]
 
+
+
 class WorkPreferences(BaseModel):
     remote_work: Optional[str]
     in_person_work: Optional[str]
@@ -85,6 +103,8 @@ class WorkPreferences(BaseModel):
     willing_to_complete_assessments: Optional[str]
     willing_to_undergo_drug_tests: Optional[str]
     willing_to_undergo_background_checks: Optional[str]
+
+
 
 class LegalAuthorization(BaseModel):
     eu_work_authorization: Optional[str]
@@ -104,6 +124,8 @@ class LegalAuthorization(BaseModel):
     legally_allowed_to_work_in_uk: Optional[str]
     requires_uk_sponsorship: Optional[str]
 
+
+
 class Resume(BaseModel):
     user_id: Optional[int] = None
     personal_information: Optional[PersonalInformation]
@@ -111,7 +133,7 @@ class Resume(BaseModel):
     experience_details: Optional[List[ExperienceDetails]] = None
     projects: Optional[List[Project]] = None
     achievements: Optional[List[Achievement]] = None
-    certifications: Optional[List[Certifications]] = None
+    certifications: Optional[List[Certification]] = None
     languages: Optional[List[Language]] = None
     interests: Optional[List[str]] = None
     self_identification: Optional[SelfIdentification] = None
@@ -121,11 +143,3 @@ class Resume(BaseModel):
     salary_expectations: Optional[SalaryExpectations] = None
 
 
-@dataclass
-class Exam:
-    name: str
-    grade: str
-
-@dataclass
-class Responsibility:
-    description: str
