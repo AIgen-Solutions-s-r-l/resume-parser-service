@@ -1,0 +1,135 @@
+{
+  "personal_information": {
+    "name": "Federico",
+    "surname": "Elia",
+    "date_of_birth": "",
+    "country": "Ireland",
+    "city": "Dublin",
+    "address": "1",
+    "phone_prefix": "+353",
+    "phone": "892338335",
+    "email": "fedembare@gmail.com",
+    "github": "",
+    "linkedin": ""
+  },
+  "education_details": [
+    {
+      "institution": "University of Genoa",
+      "location": "Genoa, Italy",
+      "degree": "Bachelor's Degree",
+      "field_of_study": "Computer Science",
+      "gpa": "4/4",
+      "start_date": "2020",
+      "end_date": "2023"
+    }
+  ],
+  "experience_details": [
+    {
+      "company": "Blockchain Rush",
+      "location": "Italy",
+      "position": "Co-Founder & Software Engineer",
+      "start_date": "01/2022",
+      "end_date": "Present",
+      "responsibilities": [
+        "Co-founded and led a startup specializing in app and software development with a focus on blockchain technology.",
+        "Provided blockchain consultations for 10+ companies, enhancing their software capabilities with secure, decentralized solutions.",
+        "Developed blockchain applications, integrated cutting-edge technology to meet client needs and drive industry innovation."
+      ]
+    },
+    {
+      "company": "University of Genoa",
+      "location": "Genoa, Italy",
+      "position": "Research Intern",
+      "start_date": "11/2023",
+      "end_date": "03/2024",
+      "responsibilities": [
+        "Conducted in-depth research on IoT security, focusing on binary instrumentation and runtime monitoring, with an emphasis on applying binary instrumentation techniques to enhance IoT systems security.",
+        "Performed in-depth study of the MQTT protocol, and Falco (open-source security tool utilizing binary instrumentation) analyzing its core operations and security implications in IoT environments.",
+        "Developed multiple software components including MQTT packet analysis library, Falco adapter, and RML monitor in Prolog."
+      ]
+    },
+    {
+      "company": "Galliera Hospital",
+      "location": "Genoa, Italy",
+      "position": "Software Engineer",
+      "start_date": "02/2023",
+      "end_date": "08/2023",
+      "responsibilities": [
+        "Took on key responsibilities in integrating and enforcing robust security protocols, ensuring that all software functionalities complied with the latest cybersecurity standards and effectively mitigated potential threats.",
+        "Played an integral role as part of the hospital's cybersecurity team, developing and maintaining a critical software tool for password validation used by over 1,600 employees, identifying that 20% of passwords were weak or compromised."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "AI Hawk",
+      "description": "GitHub Repo",
+      "highlights": [
+        "Gained over 12,000 stars on GitHub in 3 weeks, indicating rapid recognition and positive reception in the developer community.",
+        "Custom Resume and Cover Letter: Automatically generates tailored resumes and cover letters based on specific job requirements.",
+        "Automated Job Applications: Created an AI-driven tool to automate and personalize job applications on LinkedIn, improving efficiency and reducing application time."
+      ]
+    }
+  ],
+  "achievements": [
+    {
+      "title": "Winner of an Italian public competition",
+      "description": "Won first place in a public competition with a perfect score of 70/70, securing a Software Developer position at Galliera Hospital."
+    },
+    {
+      "title": "Ligurian Region Merit Scholarship",
+      "description": "Awarded annually from 2020 to 2023 in recognition of academic excellence and contribution."
+    }
+  ],
+  "certifications": [],
+  "languages": [
+    {
+      "language": "Italian",
+      "proficiency": "Native"
+    },
+    {
+      "language": "English",
+      "proficiency": "Professional"
+    }
+  ],
+  "interests": [],
+  "availability": {
+    "notice_period": ""
+  },
+  "salary_expectations": {
+    "salary_range_usd": ""
+  },
+  "self_identification": {
+    "gender": "",
+    "pronouns": "",
+    "veteran": "",
+    "disability": "",
+    "ethnicity": ""
+  },
+  "legal_authorization": {
+    "eu_work_authorization": "",
+    "us_work_authorization": "",
+    "requires_us_visa": "",
+    "requires_us_sponsorship": "",
+    "requires_eu_visa": "",
+    "legally_allowed_to_work_in_eu": "",
+    "legally_allowed_to_work_in_us": "",
+    "requires_eu_sponsorship": "",
+    "canada_work_authorization": "",
+    "requires_canada_visa": "",
+    "legally_allowed_to_work_in_canada": "",
+    "requires_canada_sponsorship": "",
+    "uk_work_authorization": "",
+    "requires_uk_visa": "",
+    "legally_allowed_to_work_in_uk": "",
+    "requires_uk_sponsorship": ""
+  },
+  "work_preferences": {
+    "remote_work": "",
+    "in_person_work": "",
+    "open_to_relocation": "",
+    "willing_to_complete_assessments": "",
+    "willing_to_undergo_drug_tests": "",
+    "willing_to_undergo_background_checks": ""
+  }
+}
