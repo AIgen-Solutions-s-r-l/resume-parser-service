@@ -58,6 +58,15 @@ class ResumeNotFoundError(ResumeException):
             status_code=status.HTTP_404_NOT_FOUND
         )
 
+class InvalidResumeDataError(ResumeException):
+    """Raised when resume data is invalid"""
+
+    def __init__(self, detail: str):
+        super().__init__(
+            detail=f"Invalid resume data: {detail}",
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
+
 
 class ResumeDuplicateError(ResumeException):
     """Raised when attempting to create a duplicate resume"""

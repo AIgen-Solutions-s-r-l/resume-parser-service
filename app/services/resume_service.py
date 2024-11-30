@@ -1,5 +1,5 @@
 from typing import Dict, Any, Optional
-from app.schemas.resume import Resume
+from app.schemas.resume import AddResume, UpdateResume
 from app.core.mongodb import collection_name
 from app.core.logging_config import LogConfig
 from pymongo import ReturnDocument
@@ -41,7 +41,7 @@ async def get_resume_by_user_id(user_id: int, version: Optional[str] = None) -> 
         return {"error": f"Error retrieving resume: {str(e)}"}
 
 
-async def add_resume(resume: Resume, current_user: int) -> Dict[str, Any]:
+async def add_resume(resume: AddResume, current_user: int) -> Dict[str, Any]:
     try:
         existing_resume = await collection_name.find_one({"user_id": current_user})
         if existing_resume:
@@ -79,7 +79,7 @@ async def add_resume(resume: Resume, current_user: int) -> Dict[str, Any]:
         return {"error": f"Unexpected error: {str(e)}"}
 
 
-async def update_resume(resume: Resume, user_id: int) -> Dict[str, Any]:
+async def update_resume(resume: UpdateResume, user_id: int) -> Dict[str, Any]:
     try:
         existing_resume = await collection_name.find_one({"user_id": user_id})
         if not existing_resume:
@@ -89,8 +89,20 @@ async def update_resume(resume: Resume, user_id: int) -> Dict[str, Any]:
             })
             return {"error": f"Resume not found for user ID: {user_id}"}
 
-        resume_data = resume.dict(exclude_unset=True)
-        resume_data["user_id"] = user_id
+        resume_data = resume.model_dump()
+
+        # Perform a diff to identify changes
+        update_data = {}
+        for key, value in resume_data.items():
+            if value is not None and existing_resume.get(key) != value:
+                update_data[key] = value
+
+        if not update_data:
+            logger.info("No changes detected for update", extra={
+                "event_type": "no_changes_detected",
+                "user_id": user_id
+            })
+            return {"message": "No changes detected"}
 
         updated_resume = await collection_name.find_one_and_update(
             {"user_id": user_id},

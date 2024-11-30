@@ -124,11 +124,8 @@ class LegalAuthorization(BaseModel):
     legally_allowed_to_work_in_uk: Optional[str]
     requires_uk_sponsorship: Optional[str]
 
-
-
-class Resume(BaseModel):
+class ResumeBase(BaseModel):
     user_id: Optional[int] = None
-    personal_information: Optional[PersonalInformation]
     education_details: Optional[List[EducationDetails]] = None
     experience_details: Optional[List[ExperienceDetails]] = None
     projects: Optional[List[Project]] = None
@@ -142,4 +139,9 @@ class Resume(BaseModel):
     availability: Optional[Availability] = None
     salary_expectations: Optional[SalaryExpectations] = None
 
+class AddResume(ResumeBase):
+    personal_information: PersonalInformation
+
+class UpdateResume(ResumeBase):
+    personal_information: Optional[PersonalInformation] = None
 

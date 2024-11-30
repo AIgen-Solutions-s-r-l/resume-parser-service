@@ -1,6 +1,7 @@
 from typing import Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, Depends, status, Query, Path
-from app.schemas.resume import Resume
+from app.core.exceptions import InvalidResumeDataError, ResumeNotFoundError
+from app.schemas.resume import ResumeBase
 from app.core.auth import get_current_user
 from app.services.resume_service import (
     get_resume_by_user_id,
@@ -24,7 +25,7 @@ router = APIRouter(
 
 @router.post(
     "/create_resume",
-    response_model=Resume,
+    response_model=ResumeBase,
     status_code=status.HTTP_201_CREATED,
     responses={
         201: {"description": "Resume successfully created"},
@@ -34,7 +35,7 @@ router = APIRouter(
     }
 )
 async def create_resume(
-        resume_data: Resume,
+        resume_data: ResumeBase,
         current_user=Depends(get_current_user)
 ) -> Any:
     """Create a new resume in the MongoDB database."""
@@ -51,7 +52,7 @@ async def create_resume(
 
 @router.get(
     "/get",
-    response_model=Resume,
+    response_model=ResumeBase,
     responses={
         200: {"description": "Resume successfully retrieved"},
         401: {"description": "Not authenticated"},
@@ -96,9 +97,9 @@ async def get_resume(
         )
 
 
-@router.put(
-    "/{user_id}",
-    response_model=Resume,
+@router.post(
+    "/update",
+    response_model=ResumeBase,
     responses={
         200: {"description": "Resume successfully updated"},
         400: {"description": "Invalid resume data"},
@@ -109,32 +110,47 @@ async def get_resume(
     }
 )
 async def update_user_resume(
-        resume_data: Resume,
+        resume_data: ResumeBase,
         current_user=Depends(get_current_user)
-) -> Any:
+) -> ResumeBase:
     """Update an existing resume."""
 
     try:
         result = await update_resume(resume_data, current_user)
-        if "error" in result:
-            if "not found" in result["error"].lower():
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail={"message": result["error"]}
-                )
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"message": result["error"]}
-            )
-
         return result
 
-    except HTTPException:
+    except ResumeNotFoundError as e:
+        logger.warning("Resume not found", extra={
+            "event_type": "resume_not_found",
+            "user_id": current_user.id,
+            "error_details": str(e)
+        })
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"error": "NotFound", "message": str(e)}
+        )
+    except InvalidResumeDataError as e:
+        logger.warning("Invalid resume data", extra={
+            "event_type": "invalid_resume_data",
+            "user_id": current_user.id,
+            "error_details": str(e)
+        })
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": "BadRequest", "message": str(e)}
+        )
+    except HTTPException as e:
+        logger.warning("HTTPException occurred", extra={
+            "event_type": "http_exception",
+            "user_id": current_user.id,
+            "status_code": e.status_code,
+            "detail": e.detail
+        })
         raise
     except Exception as e:
-        logger.error("Resume update error", extra={
+        logger.error("Resume update error", exc_info=True, extra={
             "event_type": "resume_update_error",
-            "user_id": current_user,
+            "user_id": current_user.id,
             "error_details": str(e)
         })
         raise HTTPException(
