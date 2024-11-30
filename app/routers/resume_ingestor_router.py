@@ -1,7 +1,7 @@
 from typing import Dict, Any, Optional
 from fastapi import APIRouter, HTTPException, Depends, status, Query, Path
 from app.core.exceptions import InvalidResumeDataError, ResumeNotFoundError
-from app.schemas.resume import ResumeBase
+from app.schemas.resume import AddResume,UpdateResume
 from app.core.auth import get_current_user
 from app.services.resume_service import (
     get_resume_by_user_id,
@@ -25,7 +25,7 @@ router = APIRouter(
 
 @router.post(
     "/create_resume",
-    response_model=ResumeBase,
+    response_model=AddResume,
     status_code=status.HTTP_201_CREATED,
     responses={
         201: {"description": "Resume successfully created"},
@@ -35,7 +35,7 @@ router = APIRouter(
     }
 )
 async def create_resume(
-        resume_data: ResumeBase,
+        resume_data: AddResume,
         current_user=Depends(get_current_user)
 ) -> Any:
     """Create a new resume in the MongoDB database."""
@@ -52,7 +52,7 @@ async def create_resume(
 
 @router.get(
     "/get",
-    response_model=ResumeBase,
+    response_model=AddResume,
     responses={
         200: {"description": "Resume successfully retrieved"},
         401: {"description": "Not authenticated"},
@@ -99,7 +99,7 @@ async def get_resume(
 
 @router.post(
     "/update",
-    response_model=ResumeBase,
+    response_model=UpdateResume,
     responses={
         200: {"description": "Resume successfully updated"},
         400: {"description": "Invalid resume data"},
@@ -110,9 +110,9 @@ async def get_resume(
     }
 )
 async def update_user_resume(
-        resume_data: ResumeBase,
+        resume_data: UpdateResume,
         current_user=Depends(get_current_user)
-) -> ResumeBase:
+) -> UpdateResume:
     """Update an existing resume."""
 
     try:
