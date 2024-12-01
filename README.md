@@ -211,6 +211,78 @@ Note: In this case, since exam is a nested object and is empty, we exclude it fr
   - `400 Bad Request`: Invalid data provided.
   - `404 Not Found`: Resume not found.
   - `500 Internal Server Error`: Server error.
+ 
+### 4. `POST /resumes/pdf_to_json`
+- **Description:** Converts a PDF resume to JSON format using LLMFormat and returns the structured JSON data.
+- **Request Example (via `curl`):**
+  ```bash
+  curl -X POST "http://localhost:8004/resumes/pdf_to_json" \
+    -H "accept: application/json" \
+    -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+    -F "pdf_file=@resume.pdf"
+  ```
+
+- **Responses:**
+  - `200 OK`: Resume successfully converted to JSON.
+    - **Response Example:**
+      ```json
+      {
+        "personal_information": {
+          "name": "Marco",
+          "surname": "Rossi",
+          "email": "marco.rossi@example.com"
+        },
+        "education_details": [
+          {
+            "education_level": "Master's Degree",
+            "institution": "Politecnico di Milano",
+            "field_of_study": "Software Engineering",
+            "final_evaluation_grade": "3.8/4",
+            "start_date": "2018",
+            "year_of_completion": "2024"
+          }
+        ],
+        "experience_details": [
+          {
+            "position": "Software Engineer",
+            "company": "Tech Innovations",
+            "employment_period": "06/2020 - Present",
+            "industry": "Technology",
+            "key_responsibilities": [
+              "Developed scalable web applications"
+            ]
+          }
+        ]
+      }
+      ```
+  - `400 Bad Request`: Invalid resume data or PDF processing error.
+    - **Error Example:**
+      ```json
+      {
+        "error": "Failed to generate resume from PDF."
+      }
+      ```
+  - `401 Unauthorized`: Not authenticated.
+    - **Error Example:**
+      ```json
+      {
+        "error": "Unauthorized",
+        "message": "Authentication required to access this endpoint."
+      }
+      ```
+  - `500 Internal Server Error`: Internal server error occurred during processing.
+    - **Error Example:**
+      ```json
+      {
+        "error": "InternalServerError",
+        "message": "An error occurred while processing the PDF resume."
+      }
+      ```
+
+- **Notes:**
+  - This endpoint requires an authentication token to verify the current user.
+  - The uploaded PDF file should be passed as a `multipart/form-data` field named `pdf_file`.
+  - Errors during PDF processing or JSON conversion are logged for debugging purposes.
 
 ## Testing
 
