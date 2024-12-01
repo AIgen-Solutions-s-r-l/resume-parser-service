@@ -1,13 +1,15 @@
-# auth_service
+
+# Resume Service
 
 ## Overview
 
-**auth_service** is a FastAPI-based authentication service designed to handle user registration, login, and resume ingestion. It uses PostgreSQL for user data and MongoDB for storing resumes. The service includes the following main functionalities:
+**Resume Service** is a FastAPI-based microservice designed to handle resume ingestion, retrieval, and updates. It uses MongoDB for storing resumes and integrates with user authentication for secure operations.
 
-- User Registration
-- User Login and JWT Authentication
-- Resume Ingestion
-- Resume Retrieval by User ID
+### Main Features
+
+- Resume Creation
+- Resume Retrieval by User
+- Resume Updates
 
 ## Setup
 
@@ -16,226 +18,153 @@
 Ensure you have the following installed:
 - Python 3.12.3
 - pip
-- PostgreSQL
 - MongoDB
+- Docker (optional, for containerization)
 
 ### Installation
 
 1. Clone the repository:
+   ```bash
+   git clone <repository-url>
+   cd resume_service-main
+   ```
 
-    ```sh
-    git clone https://github.com/your-repo.git
-    cd your-repo
-    ```
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-2. Create a virtual environment and activate it:
+3. Set up environment variables in a `.env` file:
+   ```env
+   MONGODB=mongodb://localhost:27017
+   RABBITMQ_URL=amqp://guest:guest@localhost:5672/
+   ```
 
-    ```sh
-    python -m venv venv
-    venv\Scripts\activate   # On Windows
-    # or 
-    source venv/bin/activate  # On macOS/Linux
-    ```
+4. Run the service:
+   ```bash
+   uvicorn app.main:app --reload
+   ```
 
-3. Install the necessary packages:
+### Docker Setup
 
-    ```sh
-    pip install -r requirements.txt
-    ```
+1. Build the Docker image:
+   ```bash
+   docker build -t resume_service .
+   ```
 
-### Database Configuration
+2. Run the container:
+   ```bash
+   docker run -p 8000:8000 --env-file .env resume_service
+   ```
 
-1. **PostgreSQL**:
-    Configure your PostgreSQL database connection in `app/core/database.py`:
+## API Documentation
 
-    ```python
-    from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-    from sqlalchemy.orm import sessionmaker
+### Endpoints
 
-    DATABASE_URL = "postgresql+asyncpg://user:password@localhost/dbname"
-
-    engine = create_async_engine(DATABASE_URL, future=True, echo=True)
-    async_session = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
-
-    async def get_db() -> AsyncSession:
-        async with async_session() as session:
-            yield session
-    ```
-
-    Ensure your PostgreSQL server is running, and the database credentials (`user`, `password`, `localhost`, `dbname`) are correct.
-
-2. **MongoDB**:
-    Configure your MongoDB connection in `app/core/database.py`:
-
-    ```python
-    from motor.motor_asyncio import AsyncIOMotorClient
-    from pymongo.errors import DuplicateKeyError
-
-    MONGO_DETAILS = "mongodb://localhost:27017"
-
-    client = AsyncIOMotorClient(MONGO_DETAILS)
-    database = client.your_database_name
-    collection_name = database.get_collection("resumes")
-
-    async def add_resume(resume: dict):
-        try:
-            result = await collection_name.insert_one(resume)
-        except DuplicateKeyError:
-            return {"error": "Resume already exists"}
-
-        inserted_resume = await collection_name.find_one({"_id": result.inserted_id})
-        return inserted_resume
-
-    async def get_resume_by_user_id(user_id: str):
-        resume = await collection_name.find_one({"user_id": user_id})
-        if not resume:
-            return {"error": "Resume not found"}
-        return resume
-    ```
-
-    Ensure your MongoDB server is running and the connection details (`mongodb://localhost:27017`) are correct.
-
-### Running the Application
-
-To run the application:
-
-```sh
-uvicorn main:app --reload
-```  
-
-(note:  
-$ sudo ./venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 80
-otherwise:  
-$ ./venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8080
-and as suggestion 127.0.0.1 - localhost)
-
-### API Endpoints
-
-#### User Registration
-
-Register a new user at `POST /auth/register`:
-
-```http
-POST /auth/register
-```
-
-Request Body:
-```json
-{
-    "username": "johndoe",
-    "email": "johndoe@example.com",
-    "password": "securepassword"
-}
-```
-
-Response:
-```json
-{
-    "message": "User registered successfully",
-    "user": "johndoe"
-}
-```
-
-#### User Login
-
-Authenticate a user and obtain a JWT token at `POST /auth/login`:
-
-```http
-POST /auth/login
-```
-
-Request Body (as `application/x-www-form-urlencoded`):
-```plaintext
-username=johndoe
-password=securepassword
-```
-
-Response:
-```json
-{
-    "access_token": "your.jwt.token.here",
-    "token_type": "bearer"
-}
-```
-
-#### Get User by Username
-
-Retrieve a user's details by username at `POST /auth/get_user_from_username`:
-
-```http
-POST /auth/get_user_from_username
-```
-
-Request Body:
-```json
-{
-    "username": "johndoe"
-}
-```
-
-Response:
-```json
-{
-    "id": 1,
-    "username": "johndoe",
-    "email": "johndoe@example.com",
-    "hashed_password": "hashedpassword"
-    // other user details
-}
-```
-
-### Resume Ingestor Endpoints
-
-#### Ingest Resume
-
-Ingest a user's resume at `POST /resume_ingestor/ingest_resume`:
-
-```http
-POST /resume_ingestor/ingest_resume
-```
-
-Request Body:
-```json
-{
-    "user_id": "user123",
-    "resume": {
-        "name": "John Doe",
-        "email": "johndoe@example.com",
-        "experience": [{"title": "Software Developer", "company": "Example Corp", "years": 2}],
-        "education": [{"degree": "BSc Computer Science", "institution": "University XYZ", "years": 4}],
-        "skills": ["Python", "FastAPI", "MongoDB"]
-    }
-}
-```
-
-Response:
-```json
-{
-    "message": "Resume ingested successfully",
-    "resume_id": "resume789"
-}
-```
-
-#### Get Resume by User ID
-
-Retrieve a user's resume by user ID at `GET /resume_ingestor/resume/{user_id}`:
-
-```http
-GET /resume_ingestor/resume/{user_id}
-```
-
-Response:
-```json
-{
-    "user_id": "user123",
-    "name": "John Doe",
-    "email": "johndoe@example.com",
-    "experience": [{"title": "Software Developer", "company": "Example Corp", "years": 2}],
-    "education": [{"degree": "BSc Computer Science", "institution": "University XYZ", "years": 4}],
-    "skills": ["Python", "FastAPI", "MongoDB"]
-}
-```
+#### 1. `POST /resumes/create_resume`
+- **Description:** Creates a new resume in the database.
+- **Request Example:**
+  ```bash
+  curl -X POST "http://localhost:8005/resumes/create_resume"   -H "accept: application/json"   -H "Content-Type: application/json"   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"   -d '{
+    "personal_information": {
+      "name": "Marco",
+      "surname": "Rossi",
+      "date_of_birth": "1995-08-15",
+      "email": "marco.rossi@example.com"
+    },
+    "education_details": [
+      {
+        "education_level": "Masters Degree",
+        "institution": "Politecnico di Milano",
+        "field_of_study": "Software Engineering",
+        "final_evaluation_grade": "3.8/4",
+        "start_date": "2018",
+        "year_of_completion": "2024"
+      }
+    ]
+  }'
+  ```
+- **Responses:**
+  - `201 Created`: Resume successfully created.
+  - `400 Bad Request`: Invalid data provided.
+  - `404 Not Found`: User not found.
+  - `500 Internal Server Error`: Server error.
 
 ---
 
-Let me know if you have any questions or need further assistance!
+#### 2. `GET /resumes/get`
+- **Description:** Retrieves the authenticated user's resume.
+- **Request Example:**
+  ```bash
+  curl -X GET "http://localhost:8004/resumes/get"   -H "accept: application/json"   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+  ```
+- **Response Example:**
+  ```json
+  {
+    "personal_information": {
+      "name": "Marco",
+      "surname": "Rossi",
+      "email": "marco.rossi@example.com"
+    },
+    "education_details": [
+      {
+        "education_level": "Masters Degree",
+        "institution": "Politecnico di Milano",
+        "field_of_study": "Software Engineering",
+        "final_evaluation_grade": "3.8/4",
+        "start_date": "2018",
+        "year_of_completion": "2024"
+      }
+    ]
+  }
+  ```
+- **Responses:**
+  - `200 OK`: Resume retrieved successfully.
+  - `401 Unauthorized`: Not authenticated.
+  - `403 Forbidden`: Not authorized to access this resume.
+  - `404 Not Found`: Resume not found.
+  - `500 Internal Server Error`: Server error.
+
+---
+
+#### 3. `POST /resumes/update`
+- **Description:** Updates an existing resume.
+- **Request Example:**
+  ```bash
+  curl -X POST "http://localhost:8004/resumes/update"   -H "accept: application/json"   -H "Content-Type: application/json"   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"   -d '{
+    "education_details": [
+      {
+        "education_level": "MiddleSchool",
+        "institution": "Unknown",
+        "field_of_study": "Life",
+        "final_evaluation_grade": "3.8/4",
+        "start_date": "2018",
+        "year_of_completion": "2024"
+      }
+    ]
+  }'
+  ```
+- **Responses:**
+  - `200 OK`: Resume successfully updated.
+  - `400 Bad Request`: Invalid data provided.
+  - `404 Not Found`: Resume not found.
+  - `500 Internal Server Error`: Server error.
+
+## Testing
+
+Run tests using:
+```bash
+pytest
+```
+
+## Logging
+
+Logs are configured using `app/core/logging_config.py`.
+
+## Contributing
+
+Contributions are welcome! Please create an issue or submit a pull request.
+
+---
+
+**Note:** Ensure all required services (MongoDB, RabbitMQ) are running before starting the application.
