@@ -230,9 +230,11 @@ Contributions are welcome! Please create an issue or submit a pull request.
 ---
 
 **Note:** Ensure all required services (MongoDB, RabbitMQ) are running before starting the application.
+
 **Note:** See resume microservice to inspect further details and endpoints
 
 ## utils.py full JSON example:
+```
 {
   "personal_information": {
     "name": "Marco",
@@ -387,4 +389,4 @@ Contributions are welcome! Please create an issue or submit a pull request.
     "willing_to_undergo_drug_tests": "No",
     "willing_to_undergo_background_checks": "Yes"
   }
-}
+}```
