@@ -59,6 +59,65 @@ Ensure you have the following installed:
 
 ## API Documentation
 
+### JSON Formatting Guidelines
+When constructing JSON payloads for resume creation and updates, adhere to these guidelines:
+- **Conditional Field Inclusion**:
+  - Atomic fields (non-nested): If empty or unspecified, retain the field and set its value to `null` or `None`.
+  - Nested objects/arrays: Include if at least one field/element has data; exclude if entirely empty.
+- **Recursion**: Apply these rules recursively.
+
+#### Examples
+1. **Empty Atomic Fields**: If personal_information has empty atomic fields, retain them with null values.
+   ```json
+   {
+     "personal_information": {
+          "name": "Marco",
+          "surname": "Rossi",
+          "date_of_birth": "15/08/1995",
+          "country": "Italy",
+          "city": null,
+          "address": null,
+          "phone_prefix": "+39",
+          "phone": "3401234567",
+          "email": "marco.rossi@example.com",
+          "github": "https://github.com/marco-rossi/ProjectExample",
+          "linkedin": null
+        }
+   }
+   ```
+
+2. **Excluding Empty Nested Objects**: If the exam object inside education_details is empty but education_details has other fields filled, exclude exam entirely.
+   ```json
+   {
+     "education_details": [
+       {
+            "education_level": "Master's Degree",
+            "institution": "Politecnico di Milano",
+            "field_of_study": "Software Engineering",
+            "final_evaluation_grade": null,
+            "start_date": "2018",
+            "year_of_completion": null,
+       }
+     ]
+   }
+   ```
+Note: In this case, since exam is a nested object and is empty, we exclude it from the JSON entirely.
+3. **Including Empty Atomic Fields in Nested Objects**:
+   ```json
+   {
+     "experience_details": [
+       {
+         "position": "Software Engineer",
+         "company": "Tech Innovations",
+         "location": null,
+         "key_responsibilities": [
+           "Developed scalable web applications"
+         ]
+       }
+     ]
+   }
+   ```
+
 ### Endpoints
 
 #### 1. `POST /resumes/create_resume`
