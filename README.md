@@ -86,7 +86,7 @@ When constructing JSON payloads for resume creation and updates, adhere to these
    }
    ```
 
-2. **Excluding Empty Nested Objects**: If the exam object inside education_details is empty but education_details has other fields filled, exclude exam entirely.
+2. **Excluding Empty Nested Objects**: If FOR EXAMPLE the exam object inside education_details is empty but education_details has other fields filled, exclude exam entirely.
    ```json
    {
      "education_details": [
@@ -103,14 +103,16 @@ When constructing JSON payloads for resume creation and updates, adhere to these
    ```
 Note: In this case, since exam is a nested object and is empty, we exclude it from the JSON entirely.
 
-3. **Including Empty Atomic Fields in Nested Objects**:
+3. **Including Empty Atomic Fields in Nested Objects & Array with at least one element**:
    ```json
    {
      "experience_details": [
        {
          "position": "Software Engineer",
          "company": "Tech Innovations",
+         "employment_period": "06/2020 - Present",
          "location": null,
+         "industry": "Technology",
          "key_responsibilities": [
            "Developed scalable web applications"
          ]
