@@ -102,6 +102,7 @@ When constructing JSON payloads for resume creation and updates, adhere to these
    }
    ```
 Note: In this case, since exam is a nested object and is empty, we exclude it from the JSON entirely.
+
 3. **Including Empty Atomic Fields in Nested Objects**:
    ```json
    {
