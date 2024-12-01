@@ -6,9 +6,22 @@ from app.core.auth import get_current_user
 from app.services.resume_service import (
     get_resume_by_user_id,
     add_resume,
-    update_resume
+    update_resume,
+    generate_resume_json_from_pdf
+    
 )
 from app.core.logging_config import LogConfig
+from typing import Any
+from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
+from app.core.auth import get_current_user
+from app.core.logging_config import LogConfig
+import os
+from typing import Any
+from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
+from app.core.auth import get_current_user
+from app.core.logging_config import LogConfig
+import os
+
 
 logger = LogConfig.get_logger()
 
@@ -160,3 +173,58 @@ async def update_user_resume(
                 "message": "An error occurred while updating the resume"
             }
         )
+
+
+@router.post(
+    "/pdf_to_json",
+    status_code=status.HTTP_200_OK,
+    responses={
+        200: {"description": "Resume successfully converted to JSON"},
+        400: {"description": "Invalid resume data or PDF processing error"},
+        401: {"description": "Not authenticated"},
+        500: {"description": "Internal server error"},
+    },
+)
+async def pdf_to_json(
+    pdf_file: UploadFile = File(...),
+    current_user=Depends(get_current_user),
+) -> Any:
+    """Convert a PDF resume to JSON using LLMFormat and return the JSON data."""
+    try:
+        # Read the uploaded PDF file into memory
+        pdf_bytes = await pdf_file.read()
+
+
+        # Generate the JSON resume from the PDF bytes
+        resume_json = await generate_resume_json_from_pdf(pdf_bytes)
+
+        if not resume_json:
+            logger.error("Failed to generate resume JSON from PDF.", extra={
+                "event_type": "resume_generation_error",
+                "user_id": current_user,
+            })
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": "Failed to generate resume from PDF."},
+            )
+
+        # Return the generated JSON resume
+        return resume_json
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}", extra={
+            "event_type": "pdf_to_json_error",
+            "user_id": current_user,
+            "error_type": type(e).__name__,
+            "error_details": str(e),
+        })
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "error": "InternalServerError",
+                "message": "An error occurred while processing the PDF resume.",
+            },
+        )
+
