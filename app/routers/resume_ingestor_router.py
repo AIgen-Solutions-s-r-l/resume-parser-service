@@ -21,7 +21,10 @@ from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
 from app.core.auth import get_current_user
 from app.core.logging_config import LogConfig
 import os
+from io import BytesIO
+from PyPDF2 import PdfReader, errors
 
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
 logger = LogConfig.get_logger()
 
@@ -34,7 +37,6 @@ router = APIRouter(
         500: {"description": "Internal server error"}
     }
 )
-
 
 @router.post(
     "/create_resume",
@@ -173,7 +175,24 @@ async def update_user_resume(
                 "message": "An error occurred while updating the resume"
             }
         )
-
+    
+def is_valid_pdf(file_bytes: bytes) -> bool:
+    """
+    Validate whether the uploaded file is a valid PDF by attempting to read its structure.
+    """
+    try:
+        # Wrap bytes in a BytesIO object for PdfReader
+        file_stream = BytesIO(file_bytes)
+        reader = PdfReader(file_stream)
+        # Attempt to access pages to confirm validity
+        _ = reader.pages[0]
+        return True
+    except (errors.PdfStreamError, IndexError):
+        # PdfStreamError for invalid streams, IndexError if no pages are present
+        return False
+    except Exception:
+        # Catch any unexpected errors
+        return False
 
 @router.post(
     "/pdf_to_json",
@@ -191,9 +210,26 @@ async def pdf_to_json(
 ) -> Any:
     """Convert a PDF resume to JSON using LLMFormat and return the JSON data."""
     try:
-        # Read the uploaded PDF file into memory
+        # Validate file size without loading the entire file into memory
+        pdf_file.file.seek(0, 2)
+        file_size = pdf_file.file.tell()
+        pdf_file.file.seek(0)
+
+        if file_size > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": "File size exceeds the 10 MB limit."},
+            )
+
+        # Read the entire file into memory for validation
         pdf_bytes = await pdf_file.read()
 
+        # Validate format using the full file
+        if not is_valid_pdf(pdf_bytes):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"error": "Invalid file format. Only PDFs are allowed."},
+            )
 
         # Generate the JSON resume from the PDF bytes
         resume_json = await generate_resume_json_from_pdf(pdf_bytes)
@@ -208,7 +244,6 @@ async def pdf_to_json(
                 detail={"error": "Failed to generate resume from PDF."},
             )
 
-        # Return the generated JSON resume
         return resume_json
 
     except HTTPException as e:
@@ -227,4 +262,3 @@ async def pdf_to_json(
                 "message": "An error occurred while processing the PDF resume.",
             },
         )
-
