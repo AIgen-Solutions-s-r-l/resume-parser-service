@@ -29,4 +29,4 @@ curl -X POST "http://localhost:8000/resumes/pdf_to_json" \
   -F "pdf_file=@/Users/yourusername/Documents/resume.pdf"
 
 
-curl -X POST "http://localhost:8005/resumes/pdf_to_json"   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lIiwiaWQiOjQsImlzX2FkbWluIjpmYWxzZSwiZXhwIjoxNzMzMDc0NzcyfQ.6n5rPdi3BkWr6N7lNLOZFjTy1roV_SPim51N9GDs1Es"   -H "Content-Type: multipart/form-data"   -F "pdf_file=@/home/federico/progetto/resume_service/FedericoElia.pdf"
+curl -X POST "http://localhost:8005/resumes/pdf_to_json"   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lIiwiaWQiOjQsImlzX2FkbWluIjpmYWxzZSwiZXhwIjoxNzMzMTgzMzI5fQ.Kb3yAeW9PN8eIbttiQmRiOHf9qYDWBuUrkXZwwlNYO8"   -H "Content-Type: multipart/form-data"   -F "pdf_file=@/home/lorenzo/resume_service/FedericoElia.pdf"

@@ -1,42 +1,65 @@
-from typing import Dict, Any, Optional
-from fastapi import APIRouter, HTTPException, Depends, status, Query, Path
-from app.core.exceptions import InvalidResumeDataError, ResumeNotFoundError
-from app.schemas.resume import AddResume,UpdateResume
+from typing import Any
+from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
+from io import BytesIO
+from PyPDF2 import PdfReader, errors
 from app.core.auth import get_current_user
+from app.core.logging_config import LogConfig
+from app.core.exceptions import InvalidResumeDataError, ResumeNotFoundError
+from app.schemas.resume import AddResume, UpdateResume
 from app.services.resume_service import (
     get_resume_by_user_id,
     add_resume,
     update_resume,
-    generate_resume_json_from_pdf
-    
+    generate_resume_json_from_pdf,
 )
-from app.core.logging_config import LogConfig
-from typing import Any
-from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
-from app.core.auth import get_current_user
-from app.core.logging_config import LogConfig
-import os
-from typing import Any
-from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
-from app.core.auth import get_current_user
-from app.core.logging_config import LogConfig
-import os
-from io import BytesIO
-from PyPDF2 import PdfReader, errors
 
+# Constants
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
+# Logger
 logger = LogConfig.get_logger()
 
+# Router
 router = APIRouter(
     prefix="/resumes",
     tags=["resumes"],
     responses={
         401: {"description": "Not authenticated"},
         403: {"description": "Not authorized"},
-        500: {"description": "Internal server error"}
-    }
+        500: {"description": "Internal server error"},
+    },
 )
+
+def validate_file_size_and_format(file: UploadFile) -> bytes:
+    """
+    Validate file size and format. Returns file content if valid.
+
+    Args:
+        file (UploadFile): Uploaded file to validate.
+
+    Returns:
+        bytes: Content of the uploaded file.
+
+    Raises:
+        HTTPException: If file size exceeds the limit or format is invalid.
+    """
+    file.file.seek(0, 2)
+    if file.file.tell() > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File size exceeds the 10 MB limit.",
+        )
+    file.file.seek(0)
+    file_bytes = file.file.read()
+    try:
+        reader = PdfReader(BytesIO(file_bytes))
+        _ = reader.pages[0]  # Validate by accessing first page
+    except (errors.PdfStreamError, IndexError):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file format. Only PDFs are allowed.",
+        )
+    return file_bytes
 
 @router.post(
     "/create_resume",
@@ -46,24 +69,17 @@ router = APIRouter(
         201: {"description": "Resume successfully created"},
         400: {"description": "Invalid resume data"},
         404: {"description": "User not found"},
-        500: {"description": "Internal server error"}
-    }
+        500: {"description": "Internal server error"},
+    },
 )
-async def create_resume(
-        resume_data: AddResume,
-        current_user=Depends(get_current_user)
-) -> Any:
-    """Create a new resume in the MongoDB database."""
-
+async def create_resume(resume_data: AddResume, current_user=Depends(get_current_user)) -> Any:
+    """Create a new resume in the database."""
     result = await add_resume(resume_data, current_user)
     if "error" in result:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"message": result["error"]}
+            status_code=status.HTTP_400_BAD_REQUEST, detail={"message": result["error"]}
         )
-
     return result
-
 
 @router.get(
     "/get",
@@ -73,46 +89,27 @@ async def create_resume(
         401: {"description": "Not authenticated"},
         403: {"description": "Not authorized to access this resume"},
         404: {"description": "Resume not found"},
-        500: {"description": "Internal server error"}
-    }
+        500: {"description": "Internal server error"},
+    },
 )
-async def get_resume(
-        current_user=Depends(get_current_user)
-) -> Any:
-    """Retrieve a user's resume from MongoDB."""
-
+async def get_resume(current_user=Depends(get_current_user)) -> Any:
+    """Retrieve a user's resume from the database."""
     try:
         result = await get_resume_by_user_id(current_user)
         if "error" in result:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail={"message": result["error"]}
+                status_code=status.HTTP_404_NOT_FOUND, detail={"message": result["error"]}
             )
-
-        logger.info("Resume retrieved", extra={
-            "event_type": "resume_retrieved",
-            "user_id": current_user,
-        })
+        logger.info("Resume retrieved", extra={"user_id": current_user})
         return result
-
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error("Resume retrieval error", extra={
-            "event_type": "resume_retrieval_error",
-            "user_id": current_user,
-            "error_details": str(e)
-        })
+        logger.error("Error retrieving resume", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "error": "InternalServerError",
-                "message": "An error occurred while retrieving the resume"
-            }
+            detail="An error occurred while retrieving the resume.",
         )
 
-
-@router.post(
+@router.put(
     "/update",
     response_model=UpdateResume,
     responses={
@@ -121,78 +118,28 @@ async def get_resume(
         401: {"description": "Not authenticated"},
         403: {"description": "Not authorized to update this resume"},
         404: {"description": "Resume not found"},
-        500: {"description": "Internal server error"}
-    }
+        500: {"description": "Internal server error"},
+    },
 )
-async def update_user_resume(
-        resume_data: UpdateResume,
-        current_user=Depends(get_current_user)
-) -> UpdateResume:
+async def update_user_resume(resume_data: UpdateResume, current_user=Depends(get_current_user)) -> UpdateResume:
     """Update an existing resume."""
-
     try:
         result = await update_resume(resume_data, current_user)
         return result
-
     except ResumeNotFoundError as e:
-        logger.warning("Resume not found", extra={
-            "event_type": "resume_not_found",
-            "user_id": current_user.id,
-            "error_details": str(e)
-        })
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={"error": "NotFound", "message": str(e)}
+            status_code=status.HTTP_404_NOT_FOUND, detail={"message": str(e)}
         )
     except InvalidResumeDataError as e:
-        logger.warning("Invalid resume data", extra={
-            "event_type": "invalid_resume_data",
-            "user_id": current_user.id,
-            "error_details": str(e)
-        })
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": "BadRequest", "message": str(e)}
+            status_code=status.HTTP_400_BAD_REQUEST, detail={"message": str(e)}
         )
-    except HTTPException as e:
-        logger.warning("HTTPException occurred", extra={
-            "event_type": "http_exception",
-            "user_id": current_user.id,
-            "status_code": e.status_code,
-            "detail": e.detail
-        })
-        raise
     except Exception as e:
-        logger.error("Resume update error", exc_info=True, extra={
-            "event_type": "resume_update_error",
-            "user_id": current_user.id,
-            "error_details": str(e)
-        })
+        logger.error("Error updating resume", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "error": "InternalServerError",
-                "message": "An error occurred while updating the resume"
-            }
+            detail="An error occurred while updating the resume.",
         )
-    
-def is_valid_pdf(file_bytes: bytes) -> bool:
-    """
-    Validate whether the uploaded file is a valid PDF by attempting to read its structure.
-    """
-    try:
-        # Wrap bytes in a BytesIO object for PdfReader
-        file_stream = BytesIO(file_bytes)
-        reader = PdfReader(file_stream)
-        # Attempt to access pages to confirm validity
-        _ = reader.pages[0]
-        return True
-    except (errors.PdfStreamError, IndexError):
-        # PdfStreamError for invalid streams, IndexError if no pages are present
-        return False
-    except Exception:
-        # Catch any unexpected errors
-        return False
 
 @router.post(
     "/pdf_to_json",
@@ -204,61 +151,20 @@ def is_valid_pdf(file_bytes: bytes) -> bool:
         500: {"description": "Internal server error"},
     },
 )
-async def pdf_to_json(
-    pdf_file: UploadFile = File(...),
-    current_user=Depends(get_current_user),
-) -> Any:
-    """Convert a PDF resume to JSON using LLMFormat and return the JSON data."""
+async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get_current_user)) -> Any:
+    """Convert a PDF resume to JSON."""
     try:
-        # Validate file size without loading the entire file into memory
-        pdf_file.file.seek(0, 2)
-        file_size = pdf_file.file.tell()
-        pdf_file.file.seek(0)
-
-        if file_size > MAX_FILE_SIZE:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"error": "File size exceeds the 10 MB limit."},
-            )
-
-        # Read the entire file into memory for validation
-        pdf_bytes = await pdf_file.read()
-
-        # Validate format using the full file
-        if not is_valid_pdf(pdf_bytes):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"error": "Invalid file format. Only PDFs are allowed."},
-            )
-
-        # Generate the JSON resume from the PDF bytes
+        pdf_bytes = validate_file_size_and_format(pdf_file)
         resume_json = await generate_resume_json_from_pdf(pdf_bytes)
-
         if not resume_json:
-            logger.error("Failed to generate resume JSON from PDF.", extra={
-                "event_type": "resume_generation_error",
-                "user_id": current_user,
-            })
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"error": "Failed to generate resume from PDF."},
+                detail="Failed to generate resume JSON from the PDF.",
             )
-
         return resume_json
-
-    except HTTPException as e:
-        raise e
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}", extra={
-            "event_type": "pdf_to_json_error",
-            "user_id": current_user,
-            "error_type": type(e).__name__,
-            "error_details": str(e),
-        })
+        logger.error("Error converting PDF to JSON", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
-                "error": "InternalServerError",
-                "message": "An error occurred while processing the PDF resume.",
-            },
+            detail="An error occurred while processing the PDF.",
         )
