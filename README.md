@@ -189,15 +189,19 @@ Note: In this case, since exam is a nested object and is empty, we exclude it fr
 
 ---
 
-#### 3. `POST /resumes/update`
+#### 3. `PUT /resumes/update`
 - **Description:** Updates an existing resume.
 - **Request Example:**
   ```bash
-  curl -X POST "http://localhost:8004/resumes/update"   -H "accept: application/json"   -H "Content-Type: application/json"   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"   -d '{
+  curl -X PUT "http://localhost:8005/resumes/update" \
+  -H "accept: application/json" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lIiwiaWQiOjQsImlzX2FkbWluIjpmYWxzZSwiZXhwIjoxNzMzMTgzMzI5fQ.Kb3yAeW9PN8eIbttiQmRiOHf9qYDWBuUrkXZwwlNYO8" \
+  -d '{
     "education_details": [
       {
-        "education_level": "MiddleSchool",
-        "institution": "Unknown",
+        "education_level": "AAAAAAAAA",
+        "institution": "VVVVVVVVVV",
         "field_of_study": "Life",
         "final_evaluation_grade": "3.8/4",
         "start_date": "2018",
