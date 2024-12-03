@@ -150,4 +150,14 @@ class UpdateResume(ResumeBase):
         Esporta i campi modificati, escludendo i campi non impostati.
         """
         return super().model_dump(exclude_unset=exclude_unset)
+    
+
+class PdfJsonResume(ResumeBase):
+    personal_information: Optional[PersonalInformation] = None
+    
+    def model_dump(self, exclude_unset: bool = True) -> dict:
+        """
+        Esporta i campi modificati, escludendo i campi non impostati.
+        """
+        return super().model_dump(exclude_unset=exclude_unset)
 

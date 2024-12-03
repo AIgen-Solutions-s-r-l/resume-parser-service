@@ -7,7 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import Settings
-from app.core.exceptions import AuthException  # Se `AuthException` è legato solo all'autenticazione, puoi rimuoverlo
 from app.core.rabbitmq_client import RabbitMQClient
 from app.core.logging_config import init_logging, test_connection
 from app.routers.resume_ingestor_router import router as resume_router

@@ -1,5 +1,6 @@
+import json
 from typing import Dict, Any, Optional
-from app.schemas.resume import AddResume, UpdateResume
+from app.schemas.resume import AddResume, UpdateResume, PdfJsonResume
 from app.core.mongodb import collection_name
 from app.core.logging_config import LogConfig
 from pymongo import ReturnDocument
@@ -168,9 +169,12 @@ async def delete_resume(user_id: int) -> Dict[str, Any]:
         return {"error": f"Unexpected error: {str(e)}"}
     
     
-async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> dict:
+async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> PdfJsonResume:
     """Given PDF bytes and OpenAI API key, returns the JSON resume."""
     #TODO da fare refactor, non ha senso creare un LLMFormat per ogni richeista, basat crealo una sola volta
     manager = LLMFormatter()
-    resume_json = manager.generate_resume_from_pdf_bytes(pdf_bytes)
-    return resume_json
+    
+ 
+    resume_data = manager.generate_resume_from_pdf_bytes(pdf_bytes)
+
+    return resume_data

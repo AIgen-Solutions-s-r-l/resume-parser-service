@@ -1,9 +1,13 @@
 import nest_asyncio
-import uvicorn
-from app.main import app  # Adjust the import path as necessary
 
-# Apply the nest_asyncio patch
+# Applica la patch di nest_asyncio
 nest_asyncio.apply()
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8005)
+    import uvicorn
+    uvicorn.run(
+        "app.main:app",  # Passa l'applicazione come stringa di importazione
+        host="0.0.0.0",
+        port=8006,
+        reload=True  # Attiva il riavvio automatico quando i file cambiano
+    )

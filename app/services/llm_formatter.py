@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class LLMFormatter:
     def __init__(self):
-        self.llm = ChatOpenAI(model_name="gpt-4o", openai_api_key="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")
+        self.llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key="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")
 
     def pdf_to_text(self, pdf_bytes: bytes) -> str:
         """Extracts text from a PDF file given its bytes content."""
@@ -43,8 +43,7 @@ class LLMFormatter:
                 - Field Values: Populate fields with appropriate values extracted from the text. If a field lacks data, explicitly include it in the JSON with a null value.
                 - Data Types: Strictly follow the data types defined in the schema (e.g., strings, arrays, objects).
                 - No Additional Fields: Do not add any fields not explicitly defined in the schema.
-                - Single-Line Output: Provide the JSON as a single-line string without line breaks (\n) or unnecessary whitespace.
-                - No Escape Characters: Ensure the output JSON is pure, without any escape characters like \". Use raw JSON format, making it directly parseable and human-readable.
+                - Single-Line Output: Provide the JSON as a single-line string without line breaks (\n) or unnecessary whitespace and No Escape Characters Ensure the output JSON is pure, without any escape characters like backslash.
 
 
             ### JSON Schema:
@@ -60,8 +59,8 @@ class LLMFormatter:
                 "phone_prefix": string or null,
                 "phone": string or null,
                 "email": string or null,
-                "github": null,
-                "linkedin": null
+                "github": string or null,
+                "linkedin": string or null
             }},
             "education_details": [
                 {{
@@ -70,7 +69,7 @@ class LLMFormatter:
                 "field_of_study": string or null,
                 "final_evaluation_grade": string or null,
                 "start_date": string or null,
-                "year_of_completion": null,
+                "year_of_completion": string or null,
                 "exam": {{
                     "Exam name": "Exam grade",
                     "Exam name": "Exam grade",
@@ -113,7 +112,7 @@ class LLMFormatter:
                 "proficiency": string or null
                 }}
             ],
-            "interests": TODO,
+            "interests": [...],
             "availability": {{
                 "notice_period": string
             }},
@@ -167,15 +166,6 @@ class LLMFormatter:
         response = chain.invoke({
             "content": content
         })
-
-        # # Parse JSON response
-        # try:
-        #     resume_json = json.loads(response)
-        # except json.JSONDecodeError:
-        #     logger.error("Failed to parse JSON. Check the output format.", extra={
-        #         "event_type": "json_parse_error"
-        #     })
-        #     resume_json = {}
 
         return response
 
