@@ -169,7 +169,7 @@ async def delete_resume(user_id: int) -> Dict[str, Any]:
         return {"error": f"Unexpected error: {str(e)}"}
     
     
-async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> PdfJsonResume:
+async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> str:
     """Given PDF bytes and OpenAI API key, returns the JSON resume."""
     #TODO da fare refactor, non ha senso creare un LLMFormat per ogni richeista, basat crealo una sola volta
     manager = LLMFormatter()

@@ -7,6 +7,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 import logging
 from io import BytesIO
+from fix_busted_json import repair_json
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class LLMFormatter:
                 - Field Values: Populate fields with appropriate values extracted from the text. If a field lacks data, explicitly include it in the JSON with a null value.
                 - Data Types: Strictly follow the data types defined in the schema (e.g., strings, arrays, objects).
                 - No Additional Fields: Do not add any fields not explicitly defined in the schema.
-                - Single-Line Output: Provide the JSON as a single-line string without line breaks (\n) or unnecessary whitespace and No Escape Characters Ensure the output JSON is pure, without any escape characters like backslash.
+                - Single-Line Output: Provide the JSON as a single-line string without line breaks (\n) or unnecessary whitespace and No Escape Characters. Ensure the output JSON is a VALID json, without any escape characters like backslash.
 
 
             ### JSON Schema:
@@ -167,7 +168,7 @@ class LLMFormatter:
             "content": content
         })
 
-        return response
+        return repair_json(response)
 
     def generate_resume_from_pdf_bytes(self, pdf_bytes: bytes) -> dict:
         """Given PDF bytes, extracts text and generates a JSON resume."""

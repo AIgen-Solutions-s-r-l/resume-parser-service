@@ -125,7 +125,6 @@ class LegalAuthorization(BaseModel):
     requires_uk_sponsorship: Optional[str]
 
 class ResumeBase(BaseModel):
-    user_id: Optional[int] = None
     education_details: Optional[List[EducationDetails]] = None
     experience_details: Optional[List[ExperienceDetails]] = None
     projects: Optional[List[Project]] = None
@@ -140,9 +139,11 @@ class ResumeBase(BaseModel):
     salary_expectations: Optional[SalaryExpectations] = None
 
 class AddResume(ResumeBase):
+    user_id: Optional[int] = None
     personal_information: Optional[PersonalInformation]
 
 class UpdateResume(ResumeBase):
+    user_id: Optional[int] = None
     personal_information: Optional[PersonalInformation] = None
     
     def model_dump(self, exclude_unset: bool = True) -> dict:

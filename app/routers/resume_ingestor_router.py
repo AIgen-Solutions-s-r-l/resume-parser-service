@@ -5,7 +5,7 @@ from PyPDF2 import PdfReader, errors
 from app.core.auth import get_current_user
 from app.core.logging_config import LogConfig
 from app.core.exceptions import InvalidResumeDataError, ResumeNotFoundError
-from app.schemas.resume import AddResume, UpdateResume
+from app.schemas.resume import AddResume, PdfJsonResume, UpdateResume
 from app.services.resume_service import (
     get_resume_by_user_id,
     add_resume,
@@ -197,7 +197,7 @@ async def update_user_resume(resume_data: UpdateResume, current_user=Depends(get
         500: {"description": "Internal server error"},
     },
 )
-async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get_current_user)) -> Any:
+async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get_current_user)) -> PdfJsonResume:
     """Convert a PDF resume to JSON."""
     try:
         pdf_bytes = validate_file_size_and_format(pdf_file)
@@ -214,7 +214,8 @@ async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get
             "Resume JSON generated successfully",
             extra={"event_type": "resume_json_generated", "user_id": current_user},
         )
-        return resume_json
+
+        return PdfJsonResume.model_validate_json(resume_json)
     except Exception as e:
         logger.error(
             "Unexpected error during PDF to JSON conversion",
