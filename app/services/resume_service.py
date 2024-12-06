@@ -6,11 +6,6 @@ from app.core.mongodb import collection_name
 from app.core.logging_config import LogConfig
 from pymongo import ReturnDocument
 from app.services.llm_formatter import LLMFormatter
-import os
-from tempfile import NamedTemporaryFile
-from megaparse.core.megaparse import MegaParse
-from megaparse.core.parser.unstructured_parser import UnstructuredParser
-
 
 logger = LogConfig.get_logger()
 
@@ -175,51 +170,11 @@ async def delete_resume(user_id: int) -> Dict[str, Any]:
         })
         return {"error": f"Unexpected error: {str(e)}"}
     
-    
-def parse_pdf_with_megaparse(pdf_path: str) -> dict:
-    """
-    Parse the PDF using MegaParse and return the JSON response.
-    """
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    try:
-        parser = UnstructuredParser()
-        megaparse = MegaParse(parser)
-
-        # Use MegaParse to load the PDF
-        response = megaparse.load(pdf_path)
-        return response
-    finally:
-        # Close the event loop
-        loop.close()
-
 async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> str:
-    """
-    Given PDF bytes, parse and return a JSON resume using MegaParse.
-    """
-    loop = asyncio.get_event_loop()
-
-    with NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_file:
-        tmp_file.write(pdf_bytes)
-        tmp_file_path = tmp_file.name
-
-    try:
-        response = await loop.run_in_executor(None, lambda: parse_pdf_with_megaparse(tmp_file_path))
-
-        resume_json = json.dumps(response, ensure_ascii=False)
-        return resume_json
-
-    finally:
-        if os.path.exists(tmp_file_path):
-            os.remove(tmp_file_path)
-            
-'''async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> str:
     """Given PDF bytes and OpenAI API key, returns the JSON resume."""
     #TODO da fare refactor, non ha senso creare un LLMFormat per ogni richeista, basat crealo una sola volta
     manager = LLMFormatter()
     
- 
     resume_data = manager.generate_resume_from_pdf_bytes(pdf_bytes)
 
-    return resume_data'''
+    return resume_data

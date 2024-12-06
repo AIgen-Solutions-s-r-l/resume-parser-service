@@ -1,5 +1,6 @@
 # llm_formatter.py
 
+import asyncio
 import json
 from PyPDF2 import PdfReader
 from langchain.prompts import ChatPromptTemplate
@@ -8,31 +9,53 @@ from langchain_core.output_parsers import StrOutputParser
 import logging
 from io import BytesIO
 from fix_busted_json import repair_json
+import os
+from tempfile import NamedTemporaryFile
+from megaparse.core.megaparse import MegaParse
+from megaparse.core.parser.unstructured_parser import UnstructuredParser
 
 logger = logging.getLogger(__name__)
+
+def parse_pdf_with_megaparse(self,pdf_path: str) -> dict:
+    """
+    Parse the PDF using MegaParse and return the JSON response.
+    """
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    try:
+        parser = UnstructuredParser()
+        megaparse = MegaParse(parser)
+
+        # Use MegaParse to load the PDF
+        response = megaparse.load(pdf_path)
+        return response
+    finally:
+        # Close the event loop
+        loop.close()
 
 class LLMFormatter:
     def __init__(self):
         self.llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key="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")
 
-    def pdf_to_text(self, pdf_bytes: bytes) -> str:
-        """Extracts text from a PDF file given its bytes content."""
+    async def pdf_to_text(self, pdf_bytes: bytes) -> dict:
+        """
+        Given PDF bytes, parse and return a JSON resume using MegaParse.
+        """
+        loop = asyncio.get_event_loop()
+
+        with NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_file:
+            tmp_file.write(pdf_bytes)
+            tmp_file_path = tmp_file.name
+
         try:
-            pdf_file = BytesIO(pdf_bytes)
-            reader = PdfReader(pdf_file)
-            text = ""
-            for page in reader.pages:
-                page_text = page.extract_text()
-                if page_text:
-                    text += page_text
-            return text
-        except Exception as e:
-            logger.error(f"Error reading PDF file: {str(e)}", extra={
-                "event_type": "pdf_read_error",
-                "error_type": type(e).__name__,
-                "error_details": str(e)
-            })
-            return ""
+            response = await loop.run_in_executor(None, lambda: parse_pdf_with_megaparse(tmp_file_path))
+
+            return response
+
+        finally:
+            if os.path.exists(tmp_file_path):
+                os.remove(tmp_file_path)
 
     def pdf_to_plain_text_resume(self, content: str) -> dict:
         """Generates a JSON resume from the extracted text."""
