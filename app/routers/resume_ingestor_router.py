@@ -214,7 +214,7 @@ async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get
             "Resume JSON generated successfully",
             extra={"event_type": "resume_json_generated", "user_id": current_user},
         )
-
+        
         return PdfJsonResume.model_validate_json(resume_json)
     except Exception as e:
         logger.error(

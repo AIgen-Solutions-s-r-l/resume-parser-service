@@ -16,29 +16,29 @@ from megaparse.core.parser.unstructured_parser import UnstructuredParser
 
 logger = logging.getLogger(__name__)
 
-def parse_pdf_with_megaparse(self,pdf_path: str) -> dict:
-    """
-    Parse the PDF using MegaParse and return the JSON response.
-    """
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-
-    try:
-        parser = UnstructuredParser()
-        megaparse = MegaParse(parser)
-
-        # Use MegaParse to load the PDF
-        response = megaparse.load(pdf_path)
-        return response
-    finally:
-        # Close the event loop
-        loop.close()
-
 class LLMFormatter:
     def __init__(self):
         self.llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key="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")
 
-    async def pdf_to_text(self, pdf_bytes: bytes) -> str:
+    def parse_pdf_with_megaparse(self, pdf_path: str):
+        """
+        Parse the PDF using MegaParse and return the JSON response.
+        """
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        try:
+            parser = UnstructuredParser()
+            megaparse = MegaParse(parser)
+
+            # Use MegaParse to load the PDF
+            response = megaparse.load(pdf_path)
+            return response
+        finally:
+            # Close the event loop
+            loop.close()
+
+    async def pdf_to_text(self, pdf_bytes: bytes):
         """
         Given PDF bytes, parse and return a JSON resume using MegaParse.
         """
@@ -49,7 +49,7 @@ class LLMFormatter:
             tmp_file_path = tmp_file.name
 
         try:
-            response = await loop.run_in_executor(None, lambda: parse_pdf_with_megaparse(tmp_file_path))
+            response = await loop.run_in_executor(None, lambda: self.parse_pdf_with_megaparse(tmp_file_path))
 
             return response
 
@@ -57,7 +57,7 @@ class LLMFormatter:
             if os.path.exists(tmp_file_path):
                 os.remove(tmp_file_path)
 
-    def pdf_to_plain_text_resume(self, content: str) -> dict:
+    def pdf_to_plain_text_resume(self, content: str):
         """Generates a JSON resume from the extracted text."""
         prompt_template = """
             You are an expert in creating structured JSON resumes. Based on the following PDF text, generate a JSON resume that strictly adheres to the provided JSON schema.
@@ -193,13 +193,29 @@ class LLMFormatter:
 
         return repair_json(response)
 
-    def generate_resume_from_pdf_bytes(self, pdf_bytes: bytes) -> dict:
+    async def generate_resume_from_pdf_bytes(self, pdf_bytes: bytes):
         """Given PDF bytes, extracts text and generates a JSON resume."""
-        content = self.pdf_to_text(pdf_bytes)
-        if not content:
-            logger.error("No content extracted from PDF.", extra={
-                "event_type": "empty_pdf_content"
-            })
-            return {}
-        resume_json = self.pdf_to_plain_text_resume(content)
+        try:
+            # Await the asynchronous text extraction
+            content = await self.pdf_to_text(pdf_bytes)
+            if not content.strip():  # Check for empty content
+                logger.error("Extracted content is empty.")
+                return {"error": "No content extracted from the PDF."}
+        except Exception as e:
+            logger.error("Failed to extract text from PDF.", extra={"error": str(e)})
+            return {"error": str(e)}
+
+        # Write the extracted text to a file for debugging
+        with open("extracted_text.txt", "w") as f:
+            f.write(content)
+
+        logger.info(f"Extracted content: {content[:500]}...")  # Log first 500 characters
+
+        try:
+            # Generate resume JSON from the extracted text
+            resume_json = self.pdf_to_plain_text_resume(content)
+        except Exception as e:
+            logger.error("Failed to generate JSON resume.", extra={"error": str(e)})
+            return {"error": str(e)}
+
         return resume_json
