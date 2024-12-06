@@ -38,7 +38,7 @@ class LLMFormatter:
     def __init__(self):
         self.llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key="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")
 
-    async def pdf_to_text(self, pdf_bytes: bytes) -> dict:
+    async def pdf_to_text(self, pdf_bytes: bytes) -> str:
         """
         Given PDF bytes, parse and return a JSON resume using MegaParse.
         """
