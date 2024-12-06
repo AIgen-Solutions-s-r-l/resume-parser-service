@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     service_name: str = "authService"
     environment: Literal["development", "staging", "production"] = "development"
     debug: bool = True
-
+    
     # Logging settings
     log_level: str = "DEBUG"
     syslog_host: str = "localhost"
@@ -21,8 +21,6 @@ class Settings(BaseSettings):
 
     # RabbitMQ settings
     rabbitmq_url: str = "amqp://guest:guest@localhost:5672/"
-
-
 
     # MongoDB settings
     mongodb_host: str = "localhost"
@@ -74,4 +72,4 @@ class Settings(BaseSettings):
 
         return base_config
 
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env", extra="allow")

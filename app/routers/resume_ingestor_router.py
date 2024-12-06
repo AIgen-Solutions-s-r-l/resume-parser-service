@@ -218,11 +218,11 @@ async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get
         return PdfJsonResume.model_validate_json(resume_json)
     except Exception as e:
         logger.error(
-            "Unexpected error during PDF to JSON conversion",
+            "Unexpected error during PDF to JSON conversion: "+str(e),
             exc_info=True,
             extra={"event_type": "unexpected_error", "user_id": current_user, "error_details": str(e)},
         )
-        raise HTTPException(
+        raise HTTPException (
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while processing the PDF.",
         )

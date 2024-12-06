@@ -5,6 +5,13 @@ from app.core.mongodb import collection_name
 from app.core.logging_config import LogConfig
 from pymongo import ReturnDocument
 from app.services.llm_formatter import LLMFormatter
+import os
+from tempfile import NamedTemporaryFile
+from megaparse.core.megaparse import MegaParse
+from langchain_openai import ChatOpenAI
+from megaparse.core.parser.megaparse_vision import MegaParseVision
+
+
 logger = LogConfig.get_logger()
 
 async def get_resume_by_user_id(user_id: int, version: Optional[str] = None) -> Dict[str, Any]:
@@ -170,6 +177,27 @@ async def delete_resume(user_id: int) -> Dict[str, Any]:
     
     
 async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> str:
+    """Given PDF bytes, parse and return a JSON resume using MegaParse."""
+    # Write the PDF bytes to a temporary file so MegaParse can load it
+    with NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_file:
+        tmp_file.write(pdf_bytes)
+        tmp_file_path = tmp_file.name
+
+    # Set up the model and parser
+    model = ChatOpenAI(model="gpt-4o", api_key=os.getenv("OPENAI_API_KEY"))
+    parser = MegaParseVision(model=model)
+    megaparse = MegaParse(parser)
+
+    # Parse the PDF
+    response = megaparse.load(tmp_file_path)
+
+    # Convert the response to JSON if it's not already
+    # Assuming `response` is a dict-like structure. If not, adjust accordingly.
+    resume_json = json.dumps(response, ensure_ascii=False)
+
+    return resume_json
+
+'''async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> str:
     """Given PDF bytes and OpenAI API key, returns the JSON resume."""
     #TODO da fare refactor, non ha senso creare un LLMFormat per ogni richeista, basat crealo una sola volta
     manager = LLMFormatter()
@@ -177,4 +205,4 @@ async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> str:
  
     resume_data = manager.generate_resume_from_pdf_bytes(pdf_bytes)
 
-    return resume_data
+    return resume_data'''
