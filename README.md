@@ -21,6 +21,7 @@ Ensure you have the following installed:
 - MongoDB
 - Docker (optional, for containerization)
 - Poppler: sudo apt install -y libpoppler-cpp-dev pkg-config cmake build-essential install poppler-utils
+- Tesseract : sudo apt install tesseract-ocr libtesseract-dev
 
 ### Installation
 

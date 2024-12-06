@@ -9,8 +9,7 @@ from app.services.llm_formatter import LLMFormatter
 import os
 from tempfile import NamedTemporaryFile
 from megaparse.core.megaparse import MegaParse
-from langchain_openai import ChatOpenAI
-from megaparse.core.parser.megaparse_vision import MegaParseVision
+from megaparse.core.parser.unstructured_parser import UnstructuredParser
 
 
 logger = LogConfig.get_logger()
@@ -185,9 +184,7 @@ def parse_pdf_with_megaparse(pdf_path: str) -> dict:
     asyncio.set_event_loop(loop)
 
     try:
-        # Initialize MegaParse components
-        model = ChatOpenAI(model="gpt-4o", api_key=os.getenv("OPENAI_API_KEY"))
-        parser = MegaParseVision(model=model)
+        parser = UnstructuredParser()
         megaparse = MegaParse(parser)
 
         # Use MegaParse to load the PDF
