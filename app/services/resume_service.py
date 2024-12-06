@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import Dict, Any, Optional
 from app.schemas.resume import AddResume, UpdateResume, PdfJsonResume
@@ -176,27 +177,46 @@ async def delete_resume(user_id: int) -> Dict[str, Any]:
         return {"error": f"Unexpected error: {str(e)}"}
     
     
+def parse_pdf_with_megaparse(pdf_path: str) -> dict:
+    """
+    Parse the PDF using MegaParse and return the JSON response.
+    """
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    try:
+        # Initialize MegaParse components
+        model = ChatOpenAI(model="gpt-4o", api_key=os.getenv("OPENAI_API_KEY"))
+        parser = MegaParseVision(model=model)
+        megaparse = MegaParse(parser)
+
+        # Use MegaParse to load the PDF
+        response = megaparse.load(pdf_path)
+        return response
+    finally:
+        # Close the event loop
+        loop.close()
+
 async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> str:
-    """Given PDF bytes, parse and return a JSON resume using MegaParse."""
-    # Write the PDF bytes to a temporary file so MegaParse can load it
+    """
+    Given PDF bytes, parse and return a JSON resume using MegaParse.
+    """
+    loop = asyncio.get_event_loop()
+
     with NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_file:
         tmp_file.write(pdf_bytes)
         tmp_file_path = tmp_file.name
 
-    # Set up the model and parser
-    model = ChatOpenAI(model="gpt-4o", api_key=os.getenv("OPENAI_API_KEY"))
-    parser = MegaParseVision(model=model)
-    megaparse = MegaParse(parser)
+    try:
+        response = await loop.run_in_executor(None, lambda: parse_pdf_with_megaparse(tmp_file_path))
 
-    # Parse the PDF
-    response = megaparse.load(tmp_file_path)
+        resume_json = json.dumps(response, ensure_ascii=False)
+        return resume_json
 
-    # Convert the response to JSON if it's not already
-    # Assuming `response` is a dict-like structure. If not, adjust accordingly.
-    resume_json = json.dumps(response, ensure_ascii=False)
-
-    return resume_json
-
+    finally:
+        if os.path.exists(tmp_file_path):
+            os.remove(tmp_file_path)
+            
 '''async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> str:
     """Given PDF bytes and OpenAI API key, returns the JSON resume."""
     #TODO da fare refactor, non ha senso creare un LLMFormat per ogni richeista, basat crealo una sola volta
