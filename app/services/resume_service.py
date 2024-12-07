@@ -1,11 +1,9 @@
-import asyncio
-import json
 from typing import Dict, Any, Optional
-from app.schemas.resume import AddResume, UpdateResume, PdfJsonResume
+from app.schemas.resume import AddResume, UpdateResume
 from app.core.mongodb import collection_name
 from app.core.logging_config import LogConfig
 from pymongo import ReturnDocument
-from app.services.llm_formatter import LLMFormatter
+from app.services.resume_parser import LLMFormatter
 
 logger = LogConfig.get_logger()
 

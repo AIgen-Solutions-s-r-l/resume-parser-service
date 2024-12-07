@@ -29,7 +29,7 @@ curl -X POST "http://localhost:8005/resumes/pdf_to_json" \
 
 
 Working:
-curl -X POST "http://localhost:8007/resumes/pdf_to_json"   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lIiwiaWQiOjQsImlzX2FkbWluIjpmYWxzZSwiZXhwIjoxNzMzNTEzMjc5fQ.goAXPqjXRhY3Q1Q97q8hIWKO2kqwZWx1epoepzUwu68"   -H "Content-Type: multipart/form-data"   -F "pdf_file=@/home/lorenzo/resume_service/FedericoElia.pdf"
+curl -X POST "http://localhost:8007/resumes/pdf_to_json"   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lIiwiaWQiOjQsImlzX2FkbWluIjpmYWxzZSwiZXhwIjoxNzMzNTkxMTYwfQ.DDHQTvGYm_jC_85pTD072Rf8NqDwbl3dGLF1d_qx1pk"   -H "Content-Type: multipart/form-data"   -F "pdf_file=@/home/lorenzo/resume_service/FedericoElia.pdf"
 
 Failing:
-curl -X POST "http://localhost:8007/resumes/pdf_to_json"   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lIiwiaWQiOjQsImlzX2FkbWluIjpmYWxzZSwiZXhwIjoxNzMzNTEzMjc5fQ.goAXPqjXRhY3Q1Q97q8hIWKO2kqwZWx1epoepzUwu68"   -H "Content-Type: multipart/form-data"   -F "pdf_file=@/home/lorenzo/resume_service/CVENG.pdf"
+curl -X POST "http://localhost:8006/resumes/pdf_to_json"   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb2huZG9lIiwiaWQiOjQsImlzX2FkbWluIjpmYWxzZSwiZXhwIjoxNzMzNTkxMTYwfQ.DDHQTvGYm_jC_85pTD072Rf8NqDwbl3dGLF1d_qx1pk"   -H "Content-Type: multipart/form-data"   -F "pdf_file=@/home/lorenzo/resume_service/CVENG.pdf"
