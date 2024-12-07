@@ -3,7 +3,7 @@ from app.schemas.resume import AddResume, UpdateResume
 from app.core.mongodb import collection_name
 from app.core.logging_config import LogConfig
 from pymongo import ReturnDocument
-from app.services.resume_parser import LLMFormatter
+from app.services.resume_parser import ResumeParser
 
 logger = LogConfig.get_logger()
 
@@ -171,8 +171,6 @@ async def delete_resume(user_id: int) -> Dict[str, Any]:
 async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> str:
     """Given PDF bytes and OpenAI API key, returns the JSON resume."""
     #TODO da fare refactor, non ha senso creare un LLMFormat per ogni richeista, basat crealo una sola volta
-    manager = LLMFormatter()
-    
-    resume_data = await manager.generate_resume_from_pdf_bytes(pdf_bytes)
-
+    parser = ResumeParser()
+    resume_data = await parser.generate_resume_from_pdf_bytes(pdf_bytes)
     return resume_data

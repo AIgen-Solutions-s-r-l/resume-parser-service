@@ -1,43 +1,53 @@
 import asyncio
 import os
-from pathlib import Path
-from typing import IO
 import logging
-import os
-from io import BytesIO
-from tempfile import NamedTemporaryFile
-from langchain_openai import ChatOpenAI
-from fix_busted_json import repair_json
-import asyncio
 import base64
 import re
+
 from io import BytesIO
 from pathlib import Path
 from typing import IO, List
+from tempfile import NamedTemporaryFile
 
-from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import HumanMessage
 from pdf2image import convert_from_path
-
-from megaparse.core.parser import BaseParser
-from megaparse.core.parser.entity import SupportedModel, TagEnum
+from fix_busted_json import repair_json
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage
+from app.services.prompt import BASE_OCR_PROMPT
 
 logger = logging.getLogger(__name__)
 
-from app.services.prompt import BASE_OCR_PROMPT
+class ResumeParser:
+    """
+    A single class that handles:
+    - PDF to images conversion
+    - OCR via a vision-capable LLM model
+    - JSON extraction and repair
+    
+    It encapsulates all logic previously spread across multiple classes.
+    """
 
-class MegaParseVision(BaseParser):
-    def __init__(self, model: BaseChatModel, **kwargs):
-        if hasattr(model, "model_name"):
-            if not SupportedModel.is_supported(model.model_name):
-                raise ValueError(
-                    f"Invalid model name. MegaParseVision only supports models with vision capabilities. "
-                    f"{model.model_name} is not supported."
-                )
-        self.model = model
-        self.parsed_chunks: list[str] | None = None
+    def __init__(self, model_name: str = "gpt-4o-mini", openai_api_key: str = None):
+        """
+        :param model_name: Name of the model with vision + text capabilities.
+        :param openai_api_key: Your OpenAI API key.
+        """
+        # Ensure the OPENAI_API_KEY environment variable or passed key is set
+        self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
+        if not self.openai_api_key:
+            raise ValueError("OpenAI API key not provided.")
 
-    def process_file(self, file_path: str, image_format: str = "PNG") -> List[str]:
+        # Initialize the ChatOpenAI client
+        self.model_name = model_name
+        self.llm = ChatOpenAI(
+            model_name=self.model_name,
+            openai_api_key=self.openai_api_key
+        )
+
+    def _process_file_to_images_base64(self, file_path: str, image_format: str = "PNG") -> List[str]:
+        """
+        Converts a PDF file into a list of base64-encoded images (one per page).
+        """
         try:
             images = convert_from_path(file_path)
             images_base64 = []
@@ -50,15 +60,11 @@ class MegaParseVision(BaseParser):
         except Exception as e:
             raise ValueError(f"Error processing PDF file: {str(e)}")
 
-    def get_element(self, tag: TagEnum, chunk: str):
-        pattern = rf"\[{tag.value}\]([\s\S]*?)\[/{tag.value}\]"
-        all_elmts = re.findall(pattern, chunk)
-        if not all_elmts:
-            print(f"No {tag.value} found in the chunk")
-            return []
-        return [elmt.strip() for elmt in all_elmts]
-
-    async def send_to_mlm(self, images_data: List[str]) -> str:
+    async def _send_images_to_model(self, images_data: List[str]) -> str:
+        """
+        Sends a batch of base64-encoded images along with the OCR prompt to the model,
+        and returns the model's response.
+        """
         images_prompt = [
             {
                 "type": "image_url",
@@ -66,138 +72,79 @@ class MegaParseVision(BaseParser):
             }
             for image_data in images_data
         ]
+
         message = HumanMessage(
             content=[
                 {"type": "text", "text": BASE_OCR_PROMPT},
                 *images_prompt,
             ],
         )
-        response = await self.model.ainvoke([message])
+        response = await self.llm.ainvoke([message])
         return str(response.content)
 
-    async def convert(
-        self,
-        file_path: str | Path | None = None,
-        file: IO[bytes] | None = None,
-        batch_size: int = 3,
-        **kwargs,
-    ) -> str:
-        if not file_path:
-            raise ValueError("File_path should be provided to run MegaParseVision")
-
-        if isinstance(file_path, Path):
-            file_path = str(file_path)
-        pdf_base64 = self.process_file(file_path)
+    async def _convert_pdf_to_final_response(self, file_path: str, batch_size: int = 3) -> str:
+        """
+        Orchestrates:
+        - Converting PDF pages to images
+        - Sending them to the model in batches
+        - Combining the responses into a final JSON-like string
+        """
+        pdf_base64_list = self._process_file_to_images_base64(file_path)
         tasks = [
-            self.send_to_mlm(pdf_base64[i : i + batch_size])
-            for i in range(0, len(pdf_base64), batch_size)
+            self._send_images_to_model(pdf_base64_list[i : i + batch_size])
+            for i in range(0, len(pdf_base64_list), batch_size)
         ]
-        self.parsed_chunks = await asyncio.gather(*tasks)
-        # In this integrated scenario, we expect the final chunk to already be the final JSON.
-        # If the call is done in batches, the last response should be the final JSON (the prompt guides the model to do so).
-        # Assuming that the model can handle multiple pages and still produce a single final JSON output.
-        final_response = "\n".join(self.parsed_chunks).strip()
+
+        parsed_chunks = await asyncio.gather(*tasks)
+        final_response = "\n".join(parsed_chunks).strip()
         return final_response
 
-class MegaParse:
-    def __init__(self, parser, format_checker=None) -> None:
-        self.parser = parser
-        self.format_checker = format_checker
-        self.last_parsed_document: str = ""
-
-    async def aload(
-        self,
-        file_path: Path | str | None = None,
-        file: IO[bytes] | None = None,
-        file_extension: str | None = "",
-    ) -> str:
-        if not (file_path or file):
-            raise ValueError("Either file_path or file should be provided")
-        if file_path and file:
-            raise ValueError("Only one of file_path or file should be provided")
-
-        if file_path and isinstance(file_path, str):
-            file_path = Path(file_path)
-        if file:
-            file.seek(0)  # Ensure file pointer is at the start if a file object is used.
-
-        try:
-            parsed_document: str = await self.parser.convert(
-                file_path=file_path, file=file
-            )
-        except Exception as e:
-            raise ValueError(f"Error while parsing {file_path or 'provided file'}: {e}")
-
-        self.last_parsed_document = parsed_document
-        return parsed_document
-
-    def load(self, file_path: Path | str) -> str:
-        if isinstance(file_path, str):
-            file_path = Path(file_path)
-
-        try:
-            loop = asyncio.get_event_loop()
-            parsed_document: str = loop.run_until_complete(
-                self.parser.convert(file_path=file_path)
-            )
-        except Exception as e:
-            raise ValueError(f"Error while parsing {file_path}: {e}")
-
-        self.last_parsed_document = parsed_document
-        return parsed_document
-
-    def save(self, file_path: Path | str) -> None:
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        with open(file_path, "w+", encoding="utf-8") as f:
-            f.write(self.last_parsed_document)
-
-class LLMFormatter:
-    def __init__(self):
-        # Note: Ensure the OPENAI_API_KEY environment variable is set to your correct API key.
-        # The model name here should be compatible with vision + text capabilities as set up in MegaParseVision.
-        self.llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=os.getenv("OPENAI_API_KEY"))
-
-    def parse_pdf_with_megaparse(self, pdf_path: str) -> str:
+    def _convert_sync(self, file_path: str) -> str:
         """
-        Parse the PDF using MegaParseVision and return the final JSON resume.
-        This now includes both the OCR step and the JSON resume generation in a single call.
+        A synchronous wrapper to handle the async convert logic.
         """
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-
         try:
-            # Reusing the same model for MegaParseVision
-            model = ChatOpenAI(model="gpt-4o-mini", api_key=os.getenv("OPENAI_API_KEY"))  # type: ignore
-            parser = MegaParseVision(model=model)
-            megaparse = MegaParse(parser)
-
-            # Use MegaParse to load the PDF and get the final JSON output directly
-            response = megaparse.load(pdf_path)
+            response = loop.run_until_complete(self._convert_pdf_to_final_response(file_path))
             return response
         finally:
             loop.close()
 
-    async def generate_resume_from_pdf_bytes(self, pdf_bytes: bytes):
+    def _parse_pdf_file(self, pdf_path: str) -> str:
         """
-        Given PDF bytes, extracts and returns the final JSON resume in a single model call.
+        Directly parse the PDF file and return the model's raw JSON response.
+        """
+        return self._convert_sync(pdf_path)
+
+    async def _parse_pdf_bytes_async(self, pdf_bytes: bytes) -> str:
+        """
+        Given PDF bytes, this writes them to a temporary file and then parses.
         """
         loop = asyncio.get_event_loop()
-
         with NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_file:
             tmp_file.write(pdf_bytes)
             tmp_file_path = tmp_file.name
 
         try:
-            response = await loop.run_in_executor(None, lambda: self.parse_pdf_with_megaparse(tmp_file_path))
-            if not response.strip():
-                logger.error("No content or invalid response from the model.")
-                return {"error": "No content extracted or invalid response."}
+            # Run the parsing in an executor to avoid blocking
+            response = await loop.run_in_executor(None, lambda: self._parse_pdf_file(tmp_file_path))
+            return response
         except Exception as e:
-            logger.error("Failed to generate JSON resume from PDF.", extra={"error": str(e)})
-            return {"error": str(e)}
+            logger.error("Failed to parse PDF bytes.", extra={"error": str(e)})
+            return ""
         finally:
             if os.path.exists(tmp_file_path):
                 os.remove(tmp_file_path)
+
+    async def generate_resume_from_pdf_bytes(self, pdf_bytes: bytes):
+        """
+        Given PDF bytes, extracts and returns the final JSON resume.
+        """
+        response = await self._parse_pdf_bytes_async(pdf_bytes)
+        if not response.strip():
+            logger.error("No content or invalid response from the model.")
+            return {"error": "No content extracted or invalid response."}
 
         # Attempt to repair JSON if necessary
         try:
