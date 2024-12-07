@@ -13,15 +13,15 @@ class PersonalInformation(BaseModel):
     phone_prefix: Optional[str]
     phone: Optional[str]
     email: Optional[EmailStr]
-    github: Optional[AnyUrl] = None
-    linkedin: Optional[AnyUrl] = None
+    # Allow strings or URLs
+    github: Optional[Union[AnyUrl, str]] = None
+    linkedin: Optional[Union[AnyUrl, str]] = None
 
     @field_serializer('github', 'linkedin')
-    def url2str(self, val) -> str:
+    def url2str(self, val) -> Optional[str]:
         if isinstance(val, Url):
             return str(val)
         return val
-
 
 
 class EducationDetails(BaseModel):
@@ -34,7 +34,6 @@ class EducationDetails(BaseModel):
     exam: Optional[Union[List[Dict[str, str]], Dict[str, str]]] = None
 
 
-
 class ExperienceDetails(BaseModel):
     position: Optional[str]
     company: Optional[str]
@@ -45,18 +44,17 @@ class ExperienceDetails(BaseModel):
     skills_acquired: Optional[List[str]] = None
 
 
-
 class Project(BaseModel):
     name: Optional[str]
     description: Optional[str]
-    link: Optional[AnyUrl] = None
+    # Allow strings or URLs
+    link: Optional[Union[AnyUrl, str]] = None
 
     @field_serializer('link')
-    def url2str(self, val) -> str:
+    def url2str(self, val) -> Optional[str]:
         if isinstance(val, Url):
             return str(val)
         return val
-
 
 
 class Achievement(BaseModel):
@@ -64,11 +62,9 @@ class Achievement(BaseModel):
     description: Optional[str]
 
 
-
 class Certification(BaseModel):
     name: Optional[str]
     description: Optional[str]
-
 
 
 class Language(BaseModel):
@@ -76,15 +72,12 @@ class Language(BaseModel):
     proficiency: Optional[str]
 
 
-
 class Availability(BaseModel):
     notice_period: Optional[str]
 
 
-
 class SalaryExpectations(BaseModel):
     salary_range_usd: Optional[str]
-
 
 
 class SelfIdentification(BaseModel):
@@ -95,7 +88,6 @@ class SelfIdentification(BaseModel):
     ethnicity: Optional[str]
 
 
-
 class WorkPreferences(BaseModel):
     remote_work: Optional[str]
     in_person_work: Optional[str]
@@ -103,7 +95,6 @@ class WorkPreferences(BaseModel):
     willing_to_complete_assessments: Optional[str]
     willing_to_undergo_drug_tests: Optional[str]
     willing_to_undergo_background_checks: Optional[str]
-
 
 
 class LegalAuthorization(BaseModel):
@@ -124,6 +115,7 @@ class LegalAuthorization(BaseModel):
     legally_allowed_to_work_in_uk: Optional[str]
     requires_uk_sponsorship: Optional[str]
 
+
 class ResumeBase(BaseModel):
     education_details: Optional[List[EducationDetails]] = None
     experience_details: Optional[List[ExperienceDetails]] = None
@@ -138,27 +130,28 @@ class ResumeBase(BaseModel):
     availability: Optional[Availability] = None
     salary_expectations: Optional[SalaryExpectations] = None
 
+
 class AddResume(ResumeBase):
     user_id: Optional[int] = None
     personal_information: Optional[PersonalInformation]
 
+
 class UpdateResume(ResumeBase):
     user_id: Optional[int] = None
     personal_information: Optional[PersonalInformation] = None
-    
+
     def model_dump(self, exclude_unset: bool = True) -> dict:
         """
         Esporta i campi modificati, escludendo i campi non impostati.
         """
         return super().model_dump(exclude_unset=exclude_unset)
-    
+
 
 class PdfJsonResume(ResumeBase):
     personal_information: Optional[PersonalInformation] = None
-    
+
     def model_dump(self, exclude_unset: bool = True) -> dict:
         """
         Esporta i campi modificati, escludendo i campi non impostati.
         """
         return super().model_dump(exclude_unset=exclude_unset)
-
