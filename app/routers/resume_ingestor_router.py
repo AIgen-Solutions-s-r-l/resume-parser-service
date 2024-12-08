@@ -1,3 +1,4 @@
+import json
 from typing import Any
 from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
 from io import BytesIO
@@ -202,6 +203,13 @@ async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get
     try:
         pdf_bytes = validate_file_size_and_format(pdf_file)
         resume_json = await generate_resume_json_from_pdf(pdf_bytes)
+
+         # Serialize the resume_json if it's a dictionary
+        if isinstance(resume_json, dict):
+            resume_json_str = json.dumps(resume_json)
+        else:
+            resume_json_str = resume_json
+
         if not resume_json:
             logger.error(
                 "Failed to generate resume JSON from PDF",
@@ -215,7 +223,7 @@ async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get
             extra={"event_type": "resume_json_generated", "user_id": current_user},
         )
         
-        return PdfJsonResume.model_validate_json(resume_json)
+        return PdfJsonResume.model_validate_json(resume_json_str)
     except Exception as e:
         logger.error(
             "Unexpected error during PDF to JSON conversion: "+str(e),

@@ -7,6 +7,8 @@ from app.services.resume_parser import ResumeParser
 
 logger = LogConfig.get_logger()
 
+resume_parser = ResumeParser()
+
 async def get_resume_by_user_id(user_id: int, version: Optional[str] = None) -> Dict[str, Any]:
     try:
         query = {"user_id": user_id}
@@ -170,7 +172,5 @@ async def delete_resume(user_id: int) -> Dict[str, Any]:
     
 async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> str:
     """Given PDF bytes and OpenAI API key, returns the JSON resume."""
-    #TODO da fare refactor, non ha senso creare un LLMFormat per ogni richeista, basat crealo una sola volta
-    parser = ResumeParser()
-    resume_data = await parser.generate_resume_from_pdf_bytes(pdf_bytes)
+    resume_data = await resume_parser.generate_resume_from_pdf_bytes(pdf_bytes)
     return resume_data
