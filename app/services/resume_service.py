@@ -94,10 +94,10 @@ async def update_resume(resume: UpdateResume, user_id: int) -> Dict[str, Any]:
 
         resume_data = resume.model_dump()
 
-        # Perform a diff to identify changes
+        # Perform a diff to identify changes (Exclude the 'vector' key from the comparison)
         update_data = {}
         for key, value in resume_data.items():
-            if value is not None and existing_resume.get(key) != value:
+            if key != "vector" and value is not None and existing_resume.get(key) != value:
                 update_data[key] = value
 
         if not update_data:

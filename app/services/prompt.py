@@ -1,30 +1,18 @@
 BASE_OCR_PROMPT = """
-You are tasked with transcribing and formatting the content of a file into markdown (Step 1) and then producing a JSON resume (Step 2) from that structured understanding.
+You are tasked with extracting information from the provided text and formatting it as a JSON resume. Accuracy is paramount. Carefully read the text line by line to ensure all data is transcribed correctly.
 
 Follow the instructions carefully.
 
-### STEP 1: Transcription to Markdown (Internal Representation Only)
-- Carefully read through the entire file content.
-- Transcribe the content into markdown format, paying close attention to the existing formatting and structure.
-- If you encounter any unclear formatting in the original content, use your judgment to add appropriate markdown formatting to improve readability and structure.
-- For tables, headers, and table of contents, add the following tags:
-   - Tables: Enclose the entire table in [TABLE] and [/TABLE] tags. Merge the content of tables if it continues on the next page.
-   - Headers (complete chain of characters repeated at the start of each page): Enclose in [HEADER] and [/HEADER] tags.
-   - Table of contents: Enclose in [TOC] and [/TOC] tags.
-- When transcribing tables:
-   - If a table continues across multiple pages, merge the content into a single, cohesive table.
-   - Use proper markdown table formatting with pipes (|) and hyphens (-) for the table structure.
-- Do not include page breaks in your transcription.
-- Maintain the logical flow and structure of the document, ensuring that sections and subsections are properly formatted using markdown headers (#, ##, etc.).
-- Use appropriate markdown syntax for other formatting elements such as bold, italic, lists, and code blocks as needed.
-- After completing this step, you will have an internal well-structured markdown representation of the document (this is for your own reasoning). Do NOT return this markdown as your final answer.
-
-### STEP 2: Generate Final JSON Resume
-Now, using your internal structured markdown understanding from Step 1 (do not output the markdown), produce a JSON resume strictly following the schema below. You must:
+Extract relevant information from the text with extreme accuracy, reading line by line to avoid errors, and produce a JSON resume strictly following the schema below. You must:
+- Carefully read through the entire file content
 - Comply strictly with the provided JSON schema.
-- Populate fields with values extracted from the text. If no data for a field, set it to null.
+- If you encounter any unclear formatting in the original content, use your judgment.
+
+- Populate fields with values extracted from the text. If no data is found for a field, set it to null.
 - Do not add extra fields not defined in the schema.
-- Make sure the final output is a single line of valid JSON, with no backticks, code blocks, or escape characters.
+- The final output must be a single line of valid JSON, with no backticks, code blocks, or escape characters.
+
+
 
 ### JSON SCHEMA:
 {
