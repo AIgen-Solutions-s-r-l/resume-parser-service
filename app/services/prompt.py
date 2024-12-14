@@ -11,7 +11,7 @@ Extract relevant information from the text with extreme accuracy, reading line b
 - Populate fields with values extracted from the text. If no data is found for a field, set it to null.
 - Do not add extra fields not defined in the schema.
 - The final output must be a single line of valid JSON, with no backticks, code blocks, or escape characters.
-
+- Do not exclude any content from the page.
 
 
 ### JSON SCHEMA:
