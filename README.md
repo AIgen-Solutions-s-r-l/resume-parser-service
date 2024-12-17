@@ -290,6 +290,9 @@ Note: In this case, since exam is a nested object and is empty, we exclude it fr
   - The uploaded PDF file should be passed as a `multipart/form-data` field named `pdf_file`.
   - Errors during PDF processing or JSON conversion are logged for debugging purposes.
 
+![Resume 1](https://github.com/user-attachments/assets/222676e1-bd4f-4a20-a556-d844712dd7c4)
+
+
 ## Testing
 
 Run tests using:
