@@ -139,3 +139,5 @@ venv/*
 
 .idea
 /alembic/versions/*
+
+*.pdf

@@ -60,17 +60,17 @@ class Project(BaseModel):
 
 class Achievement(BaseModel):
     name: Optional[str]
-    description: Optional[str]
+    description: Optional[str] = None
 
 
 class Certification(BaseModel):
     name: Optional[str]
-    description: Optional[str]
+    description: Optional[str] = None
 
 
 class Language(BaseModel):
     language: Optional[str]
-    proficiency: Optional[str]
+    proficiency: Optional[str] = None
 
 
 class Availability(BaseModel):
