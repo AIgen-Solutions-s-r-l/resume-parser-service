@@ -43,44 +43,60 @@ async def get_resume_by_user_id(user_id: int, version: Optional[str] = None) -> 
         })
         return {"error": f"Error retrieving resume: {str(e)}"}
 
-
 async def add_resume(resume: AddResume, current_user: int) -> Dict[str, Any]:
+    """
+    Add a new resume for the user. If an existing resume is found, delete it before inserting the new one.
+    Handles consistency manually since transactions are unavailable.
+
+    Args:
+        resume (AddResume): The resume data to insert.
+        current_user (int): The ID of the current user.
+
+    Returns:
+        Dict[str, Any]: The inserted resume document or an error message.
+    """
     try:
+        # Check for an existing resume
         existing_resume = await collection_name.find_one({"user_id": current_user})
         if existing_resume:
-            logger.warning("Resume already exists", extra={
-                "event_type": "resume_duplicate",
-                "user_id": current_user
-            })
-            return {"error": f"Resume already exists for user ID: {current_user}"}
+            logger.warning(
+                "Existing resume found, deleting before creating a new one",
+                extra={"event_type": "resume_replace", "user_id": current_user},
+            )
+            delete_result = await collection_name.delete_one({"user_id": current_user})
+            if delete_result.deleted_count == 0:
+                raise RuntimeError("Failed to delete existing resume during replacement.")
 
+        # Set user_id on the new resume
         resume.user_id = current_user
 
+        # Insert the new resume
         result = await collection_name.insert_one(resume.model_dump())
         if result.inserted_id:
             inserted_resume = await collection_name.find_one({"_id": result.inserted_id})
             if inserted_resume:
                 inserted_resume["_id"] = str(inserted_resume["_id"])
-                logger.info("Resume created", extra={
-                    "event_type": "resume_created",
-                    "user_id": current_user
-                })
+                logger.info(
+                    "Resume created successfully",
+                    extra={"event_type": "resume_created", "user_id": current_user},
+                )
                 return inserted_resume
 
-        logger.error("Resume insertion failed", extra={
-            "event_type": "resume_creation_error",
-            "user_id": current_user
-        })
-        return {"error": "Failed to retrieve inserted resume"}
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}", extra={
-            "event_type": "resume_creation_error",
-            "user_id": current_user,
-            "error_type": type(e).__name__,
-            "error_details": str(e)
-        })
-        return {"error": f"Unexpected error: {str(e)}"}
+        # Raise an exception if insertion fails
+        raise RuntimeError("Failed to insert new resume.")
 
+    except Exception as e:
+        logger.error(
+            "Error during add_resume operation",
+            exc_info=True,
+            extra={
+                "event_type": "resume_creation_error",
+                "user_id": current_user,
+                "error_type": type(e).__name__,
+                "error_details": str(e),
+            },
+        )
+        return {"error": f"Unexpected error: {str(e)}"}
 
 async def update_resume(resume: UpdateResume, user_id: int) -> Dict[str, Any]:
     try:
