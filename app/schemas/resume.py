@@ -260,11 +260,26 @@ class ResumeBase(BaseModel):
         Overrides the model_dump method to dynamically include the 'vector' field.
         It automatically calculates and returns it as part of the dictionary.
         """
-        embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
-        vector = embeddings.embed_query(self.to_text())
+        import os
+        from langchain_openai import OpenAIEmbeddings
+
+        # Fetch the OpenAI API key from the environment
+        openai_api_key = os.getenv("OPENAI_API_KEY")
+        if not openai_api_key:
+            raise ValueError("OpenAI API key is missing. Please set the 'OPENAI_API_KEY' environment variable.")
+
+        # Log the embedding initialization
+        try:
+            embeddings = OpenAIEmbeddings(model="text-embedding-ada-002", openai_api_key=openai_api_key)
+            vector = embeddings.embed_query(self.to_text())
+        except Exception as e:
+            raise RuntimeError(f"Failed to generate embeddings: {e}")
+
+        # Call the base model_dump and add the vector field
         result = super().model_dump(exclude_unset=exclude_unset)
-        result['vector'] = vector
+        result["vector"] = vector
         return result
+
         
 
 class AddResume(ResumeBase):
