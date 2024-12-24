@@ -93,7 +93,7 @@ async def create_resume(resume_data: AddResume, current_user=Depends(get_current
         extra={
             "event_type": "resume_creation_request",
             "user_id": current_user,
-            "resume_data": resume_data.dict() if hasattr(resume_data, "dict") else str(resume_data),
+            "resume_data": resume_data.model_dump(exclude_unset=True) if hasattr(resume_data, "model_dump") else str(resume_data),
         },
     )
     try:
@@ -133,7 +133,7 @@ async def create_resume(resume_data: AddResume, current_user=Depends(get_current
                 "event_type": "unexpected_error",
                 "user_id": current_user,
                 "error_details": str(e),
-                "resume_data": resume_data.dict() if hasattr(resume_data, "dict") else str(resume_data),
+                "resume_data": resume_data.model_dump(exclude_unset=True) if hasattr(resume_data, "model_dump") else str(resume_data),
             },
         )
         raise HTTPException(
