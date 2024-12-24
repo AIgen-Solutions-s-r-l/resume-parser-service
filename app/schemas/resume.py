@@ -24,6 +24,12 @@ class PersonalInformation(BaseModel):
             return str(val)
         return val
 
+class RelevantModule(BaseModel):
+    module: str
+    grade: str
+
+class ExamDetails(BaseModel):
+    relevant_modules: Optional[List[RelevantModule]]
 
 class EducationDetails(BaseModel):
     education_level: Optional[str]
@@ -32,7 +38,7 @@ class EducationDetails(BaseModel):
     final_evaluation_grade: Optional[str] = None
     start_date: Optional[str]
     year_of_completion: Optional[Union[int, str]] = None
-    exam: Optional[Union[List[Dict[str, str]], Dict[str, str]]] = None
+    exam: Optional[Union[List[Dict[str, str]], Dict[str, str], ExamDetails]] = None
 
 
 class ExperienceDetails(BaseModel):

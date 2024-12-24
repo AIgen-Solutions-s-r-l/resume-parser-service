@@ -34,7 +34,8 @@ class ResumeParser:
         :param model_name: Name of the model with vision + text capabilities.
         :param openai_api_key: Your OpenAI API key.
         """
-        self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
+        #self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
+        self.openai_api_key = "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"
         if not self.openai_api_key:
             raise ValueError("OpenAI API key not provided.")
 
