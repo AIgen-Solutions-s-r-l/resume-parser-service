@@ -88,23 +88,53 @@ def validate_file_size_and_format(file: UploadFile) -> bytes:
 )
 async def create_resume(resume_data: AddResume, current_user=Depends(get_current_user)) -> Any:
     """Create a new resume in the database."""
+    logger.info(
+        "Received request to create resume",
+        extra={
+            "event_type": "resume_creation_request",
+            "user_id": current_user,
+            "resume_data": resume_data.dict() if hasattr(resume_data, "dict") else str(resume_data),
+        },
+    )
     try:
+        logger.info(
+            "Attempting to add resume to the database",
+            extra={"event_type": "database_operation_start", "user_id": current_user},
+        )
         result = await add_resume(resume_data, current_user)
+        
         if "error" in result:
             logger.error(
-                "Error creating resume",
-                extra={"event_type": "resume_creation_error", "user_id": current_user},
+                "Error encountered during resume creation",
+                extra={
+                    "event_type": "resume_creation_error",
+                    "user_id": current_user,
+                    "error_details": result["error"],
+                },
             )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail={"message": result["error"]}
             )
-        logger.info("Resume created successfully", extra={"event_type": "resume_created", "user_id": current_user})
+
+        logger.info(
+            "Resume created successfully",
+            extra={
+                "event_type": "resume_created",
+                "user_id": current_user,
+                "resume_id": result.get("resume_id", "unknown"),
+            },
+        )
         return result
     except Exception as e:
         logger.error(
             "Unexpected error during resume creation",
             exc_info=True,
-            extra={"event_type": "unexpected_error", "user_id": current_user, "error_details": str(e)},
+            extra={
+                "event_type": "unexpected_error",
+                "user_id": current_user,
+                "error_details": str(e),
+                "resume_data": resume_data.dict() if hasattr(resume_data, "dict") else str(resume_data),
+            },
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
