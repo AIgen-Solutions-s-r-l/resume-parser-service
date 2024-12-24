@@ -6,10 +6,10 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 class PersonalInformation(BaseModel):
     name: Optional[str]
     surname: Optional[str]
-    date_of_birth: Optional[str]
+    date_of_birth: Optional[str] = None
     country: Optional[str]
     city: Optional[str]
-    address: Optional[str]
+    address: Optional[str] = None
     zip_code: Optional[str] = Field(None, min_length=5, max_length=10)
     phone_prefix: Optional[str]
     phone: Optional[str]
@@ -46,7 +46,7 @@ class ExperienceDetails(BaseModel):
     company: Optional[str]
     employment_period: Optional[str]
     location: Optional[str]
-    industry: Optional[str]
+    industry: Optional[str] = None
     key_responsibilities: Optional[List[str]] = None
     skills_acquired: Optional[List[str]] = None
 
