@@ -190,10 +190,10 @@ class ResumeParser:
 
     async def _parse_pdf_bytes_async(self, pdf_bytes: bytes) -> Dict[str, Any]:
         """
-        Given PDF bytes, this writes them to a temporary file and then:
-        1. Uses the external OCR service to get markdown result.
-        2. Uses the LLM-based OCR to get JSON-like result.
-        3. Calls another LLM prompt to combine both results into a final JSON.
+        Given PDF bytes, writes them to a temporary file and:
+        1. Gets the external OCR result (markdown).
+        2. Gets the LLM-based OCR result (JSON-like).
+        3. Combines both results via another LLM call.
         """
         loop = asyncio.get_event_loop()
         with NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_file:
@@ -201,13 +201,17 @@ class ResumeParser:
             tmp_file_path = tmp_file.name
 
         try:
-            # Step 1: Get external OCR result (markdown)
-            external_markdown = await self._external_ocr(tmp_file_path)
+            # Step 1 & 2: Run external OCR and LLM OCR in parallel
+            external_markdown_task = self._external_ocr(tmp_file_path)
+            llm_response_task = loop.run_in_executor(None, lambda: self._parse_pdf_file(tmp_file_path))
+
+            external_markdown, llm_response = await asyncio.gather(
+                external_markdown_task, llm_response_task
+            )
+
+            # Handle empty results
             if not external_markdown.strip():
                 logger.warning("External OCR returned empty or invalid content.")
-
-            # Step 2: Get LLM-based OCR result (JSON-like string)
-            llm_response = await loop.run_in_executor(None, lambda: self._parse_pdf_file(tmp_file_path))
             if not llm_response.strip():
                 logger.warning("LLM OCR returned empty or invalid content.")
 
@@ -217,7 +221,6 @@ class ResumeParser:
             # Attempt to repair the final combined JSON
             try:
                 final_json = repair_json(combined_response)
-                print(final_json)
                 return final_json
             except Exception as e:
                 logger.error("Failed to parse the combined JSON.", extra={"error": str(e)})
