@@ -1,4 +1,5 @@
 import asyncio
+from concurrent.futures import ThreadPoolExecutor
 import os
 import logging
 import base64
@@ -29,7 +30,7 @@ class ResumeParser:
     - Combining results from both approaches via another LLM call
     """
 
-    def __init__(self, model_name: str = "gpt-4o-mini", openai_api_key: str = None):
+    def __init__(self, model_name: str = "gpt-4o-mini", openai_api_key: str = None, executor: ThreadPoolExecutor = None):
         """
         :param model_name: Name of the model with vision + text capabilities.
         :param openai_api_key: Your OpenAI API key.
@@ -45,6 +46,12 @@ class ResumeParser:
             model_name=self.model_name,
             openai_api_key=self.openai_api_key
         )
+
+        self._executor: ThreadPoolExecutor | None = None
+
+    def set_executor(self, executor: ThreadPoolExecutor):
+        """Inject the shared ThreadPoolExecutor after initialization."""
+        self._executor = executor
 
     def _process_file_to_images_base64(self, file_path: str, image_format: str = "PNG") -> List[str]:
         """
@@ -203,7 +210,11 @@ class ResumeParser:
         try:
             # Step 1 & 2: Run external OCR and LLM OCR in parallel
             external_markdown_task = self._external_ocr(tmp_file_path)
-            llm_response_task = loop.run_in_executor(None, lambda: self._parse_pdf_file(tmp_file_path))
+            
+            llm_response_task = loop.run_in_executor(
+                self._executor,
+                lambda: self._parse_pdf_file(tmp_file_path)
+            )
 
             external_markdown, llm_response = await asyncio.gather(
                 external_markdown_task, llm_response_task

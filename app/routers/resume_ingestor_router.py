@@ -218,8 +218,6 @@ async def update_user_resume(resume_data: UpdateResume, current_user=Depends(get
             detail="An error occurred while updating the resume.",
         )
 
-from time import perf_counter
-
 @router.post(
     "/pdf_to_json",
     status_code=status.HTTP_200_OK,
@@ -232,7 +230,6 @@ from time import perf_counter
 )
 async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get_current_user)) -> PdfJsonResume:
     """Convert a PDF resume to JSON."""
-    start_time = perf_counter()  # Start measuring time
     try:
         pdf_bytes = validate_file_size_and_format(pdf_file)
         resume_json = await generate_resume_json_from_pdf(pdf_bytes)
@@ -266,12 +263,4 @@ async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while processing the PDF.",
-        )
-    finally:
-        # Measure and log the time taken
-        end_time = perf_counter()  # End measuring time
-        execution_time = end_time - start_time
-        logger.info(
-            f"Endpoint execution time: {execution_time:.2f} seconds",
-            extra={"event_type": "execution_time_logged", "user_id": current_user, "execution_time": execution_time},
         )

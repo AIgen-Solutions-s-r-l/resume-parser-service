@@ -4,7 +4,7 @@ curl -X POST "http://localhost:8005/resumes/pdf_to_json" \
   -H "Content-Type: multipart/form-data" \
   -F "pdf_file=@/Users/yourusername/Documents/resume.pdf"
 
-curl -X POST "http://localhost:8007/resumes/pdf_to_json"   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJsb3JlbnpvIiwiaWQiOjgsImlzX2FkbWluIjpmYWxzZSwiZXhwIjoxNzM0OTg1ODg1fQ.7sttNB7sczt84GaAF0gaXcbc1plX7Xh3Ka1Md87-4Cc"   -H "Content-Type: multipart/form-data"   -F "pdf_file=@/home/lorenzo/resume_service/gioiadivivere with errors versione 2.pdf"
+curl -X POST "http://localhost:8008/resumes/pdf_to_json"   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJsb3JlbnpvIiwiaWQiOjgsImlzX2FkbWluIjpmYWxzZSwiZXhwIjoxNzM2MTk1MDc2fQ.r_z6SXmKjW5kSGH4ru7B18zhQdY-3_du1Eao61D5Sj4"   -H "Content-Type: multipart/form-data"   -F "pdf_file=@/home/lorenzo/resume_service/FedericoElia.pdf"
 
 curl -X POST "http://localhost:8008/resumes/create_resume" \
 -H "accept: application/json" \
