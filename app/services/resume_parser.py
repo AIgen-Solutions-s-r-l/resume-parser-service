@@ -139,11 +139,11 @@ class ResumeParser:
             response = requests.post(url, files=form_data, headers=headers)
             data = response.json()
 
-        max_polls = 300
+        max_polls = 1000
         check_url = data["request_check_url"]
 
         for i in range(max_polls):
-            time.sleep(2)
+            time.sleep(0.0001)
             response = requests.get(check_url, headers=headers)
             data = response.json()
 
