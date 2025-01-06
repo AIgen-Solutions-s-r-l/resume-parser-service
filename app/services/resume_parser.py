@@ -142,13 +142,25 @@ class ResumeParser:
         max_polls = 1000
         check_url = data["request_check_url"]
 
+        poll_interval = 0.001  # Start with 1ms
+
         for i in range(max_polls):
-            time.sleep(0.0001)
+            # Poll the OCR status
             response = requests.get(check_url, headers=headers)
             data = response.json()
 
+            # Check if processing is complete
             if data["status"] == "complete":
                 return data['markdown']
+
+            # Sleep for the current poll interval
+            time.sleep(poll_interval)
+
+            # Adjust poll interval dynamically
+            if i < 100:  # Faster polling for the first 100 iterations
+                poll_interval = min(0.01, poll_interval * 1.5)  # Gradually increase to max 10ms
+            else:  # Slower polling for subsequent iterations
+                poll_interval = min(0.05, poll_interval * 1.5)  # Gradually increase to max 50ms
 
         logger.error("External OCR service did not complete within polling limit.")
         return ""

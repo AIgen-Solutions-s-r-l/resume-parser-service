@@ -218,6 +218,8 @@ async def update_user_resume(resume_data: UpdateResume, current_user=Depends(get
             detail="An error occurred while updating the resume.",
         )
 
+from time import perf_counter
+
 @router.post(
     "/pdf_to_json",
     status_code=status.HTTP_200_OK,
@@ -230,11 +232,12 @@ async def update_user_resume(resume_data: UpdateResume, current_user=Depends(get
 )
 async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get_current_user)) -> PdfJsonResume:
     """Convert a PDF resume to JSON."""
+    start_time = perf_counter()  # Start measuring time
     try:
         pdf_bytes = validate_file_size_and_format(pdf_file)
         resume_json = await generate_resume_json_from_pdf(pdf_bytes)
 
-         # Serialize the resume_json if it's a dictionary
+        # Serialize the resume_json if it's a dictionary
         if isinstance(resume_json, dict):
             resume_json_str = json.dumps(resume_json)
         else:
@@ -256,11 +259,19 @@ async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get
         return PdfJsonResume.model_validate_json(resume_json_str)
     except Exception as e:
         logger.error(
-            "Unexpected error during PDF to JSON conversion: "+str(e),
+            "Unexpected error during PDF to JSON conversion: " + str(e),
             exc_info=True,
             extra={"event_type": "unexpected_error", "user_id": current_user, "error_details": str(e)},
         )
-        raise HTTPException (
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while processing the PDF.",
+        )
+    finally:
+        # Measure and log the time taken
+        end_time = perf_counter()  # End measuring time
+        execution_time = end_time - start_time
+        logger.info(
+            f"Endpoint execution time: {execution_time:.2f} seconds",
+            extra={"event_type": "execution_time_logged", "user_id": current_user, "execution_time": execution_time},
         )
