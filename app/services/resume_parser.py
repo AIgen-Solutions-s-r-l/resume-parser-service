@@ -18,6 +18,23 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 from app.services.prompt import BASE_OCR_PROMPT
 
+
+from docling.backend.docling_parse_backend import DoclingParseDocumentBackend
+from docling.datamodel.base_models import InputFormat
+from docling.datamodel.pipeline_options import (
+    EasyOcrOptions,
+    OcrMacOptions,
+    PdfPipelineOptions,
+    RapidOcrOptions,
+    TesseractCliOcrOptions,
+    TesseractOcrOptions,
+)
+from docling.document_converter import DocumentConverter, PdfFormatOption
+
+
+
+
+
 logger = logging.getLogger(__name__)
 
 class ResumeParser:
@@ -126,51 +143,37 @@ class ResumeParser:
         """
         return self._convert_sync(pdf_path)
 
+    
+    
+    
+
     async def _external_ocr(self, pdf_path: str) -> str:
         """
         Sends the PDF to an external OCR service and polls for the result.
         Returns the markdown text if successful.
         """
-        url = "https://www.datalab.to/api/v1/marker"
-        headers = {"X-Api-Key": "kH9nBHsdrw123iikQAxjqc1nICmj7_T6GgBdGoWNb-0"}
+        input_doc = Path(pdf_path)
 
-        with open(pdf_path, 'rb') as f:
-            form_data = {
-                'file': ('test.pdf', f, 'application/pdf'),
-                'langs': (None, "English"),
-                'force_ocr': (None, True),
-                'paginate': (None, False),
-                'output_format': (None, 'markdown')
+        pipeline_options = PdfPipelineOptions()
+        pipeline_options.do_ocr = True
+        pipeline_options.do_table_structure = True
+        pipeline_options.table_structure_options.do_cell_matching = True
+
+
+        ocr_options = TesseractCliOcrOptions(force_full_page_ocr=True)
+        pipeline_options.ocr_options = ocr_options
+
+        converter = DocumentConverter(
+            format_options={
+                InputFormat.PDF: PdfFormatOption(
+                    pipeline_options=pipeline_options,
+                )
             }
+        )
 
-            response = requests.post(url, files=form_data, headers=headers)
-            data = response.json()
-
-        max_polls = 1000
-        check_url = data["request_check_url"]
-
-        poll_interval = 0.001  # Start with 1ms
-
-        for i in range(max_polls):
-            # Poll the OCR status
-            response = requests.get(check_url, headers=headers)
-            data = response.json()
-
-            # Check if processing is complete
-            if data["status"] == "complete":
-                return data['markdown']
-
-            # Sleep for the current poll interval
-            time.sleep(poll_interval)
-
-            # Adjust poll interval dynamically
-            if i < 100:  # Faster polling for the first 100 iterations
-                poll_interval = min(0.01, poll_interval * 1.5)  # Gradually increase to max 10ms
-            else:  # Slower polling for subsequent iterations
-                poll_interval = min(0.05, poll_interval * 1.5)  # Gradually increase to max 50ms
-
-        logger.error("External OCR service did not complete within polling limit.")
-        return ""
+        doc = converter.convert(input_doc).document
+        md = doc.export_to_markdown()
+        return(md)
 
     async def _combine_ocr_results(self, external_markdown: str, llm_response: str) -> str:
         """

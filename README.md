@@ -20,8 +20,9 @@ Ensure you have the following installed:
 - pip
 - MongoDB
 - Docker (optional, for containerization)
-- Poppler: sudo apt install -y libpoppler-cpp-dev pkg-config cmake build-essential install poppler-utils
-- Tesseract : sudo apt install tesseract-ocr libtesseract-dev
+- Tesseract : apt-get install tesseract-ocr tesseract-ocr-eng libtesseract-dev libleptonica-dev pkg-config
+              TESSDATA_PREFIX=$(dpkg -L tesseract-ocr-eng | grep tessdata$)
+              echo "Set TESSDATA_PREFIX=${TESSDATA_PREFIX}"
 
 ### Installation
 
