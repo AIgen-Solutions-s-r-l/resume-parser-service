@@ -22,14 +22,14 @@ from app.services.prompt import BASE_OCR_PROMPT
 from docling.backend.docling_parse_backend import DoclingParseDocumentBackend
 from docling.datamodel.base_models import InputFormat
 from docling.datamodel.pipeline_options import (
-    EasyOcrOptions,
-    OcrMacOptions,
+    AcceleratorDevice,
+    AcceleratorOptions,
     PdfPipelineOptions,
-    RapidOcrOptions,
     TesseractCliOcrOptions,
     TesseractOcrOptions,
 )
 from docling.document_converter import DocumentConverter, PdfFormatOption
+
 
 
 
@@ -154,7 +154,17 @@ class ResumeParser:
         """
         input_doc = Path(pdf_path)
 
+
+        accelerator_options = AcceleratorOptions(
+            num_threads=8, device=AcceleratorDevice.CPU
+        )
+
+
+
+
+
         pipeline_options = PdfPipelineOptions()
+        pipeline_options.accelerator_options = accelerator_options
         pipeline_options.do_ocr = True
         pipeline_options.do_table_structure = True
         pipeline_options.table_structure_options.do_cell_matching = True
