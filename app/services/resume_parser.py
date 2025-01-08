@@ -169,8 +169,10 @@ class ResumeParser:
         pipeline_options.do_table_structure = True
         pipeline_options.table_structure_options.do_cell_matching = True
 
-
-        ocr_options = TesseractCliOcrOptions(force_full_page_ocr=True)
+    	#TODO da capire le differnze    
+        #ocr_options = TesseractCliOcrOptions(force_full_page_ocr=True)
+        
+        ocr_options = TesseractCliOcrOptions()
         pipeline_options.ocr_options = ocr_options
 
         converter = DocumentConverter(
