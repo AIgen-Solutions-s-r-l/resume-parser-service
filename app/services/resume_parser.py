@@ -148,7 +148,6 @@ class ResumeParser:
             for s in potential_strings:
                 found_url = re.findall(url_pattern, s.decode('ascii', errors='ignore'))
                 urls.extend(found_url)
-            print("URL------", urls)
                 
         return urls
     
