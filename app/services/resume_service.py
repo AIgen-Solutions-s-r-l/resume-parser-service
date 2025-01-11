@@ -189,4 +189,6 @@ async def delete_resume(user_id: int) -> Dict[str, Any]:
 async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> str:
     """Given PDF bytes and OpenAI API key, returns the JSON resume."""
     resume_data = await resume_parser.generate_resume_from_pdf_bytes(pdf_bytes)
+    with open("resume.json", "w") as f:
+        f.write(resume_data)
     return resume_data

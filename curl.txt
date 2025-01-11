@@ -1,10 +1,6 @@
 curl -X POST https://auth.neuraltrading.group/auth/login -H "Content-Type: application/json" -d '{"username": "lorenzo", "password": "12345678"}'
 
-curl -X POST "http://localhost:8006/resumes/pdf_to_json" \
-  -H "Content-Type: multipart/form-data" \
-  -F "pdf_file=@/home/federico/progetto/resume_service/CVENG.pdf"
-
-curl -X POST "http://localhost:8006/resumes/pdf_to_json"   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJsb3JlbnpvIiwiaWQiOjgsImlzX2FkbWluIjpmYWxzZSwiZXhwIjoxNzM2Mjg3NTUxfQ.xBLzWSCA81qBWzWIB0uuVmQlilhB-mxGufRjf0jCEnE"   -H "Content-Type: multipart/form-data"   -F "pdf_file=@/home/federico/progetto/resume_service/CVENG.pdf"
+curl -X POST "http://localhost:8006/resumes/pdf_to_json"   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJsb3JlbnpvIiwiaWQiOjgsImlzX2FkbWluIjpmYWxzZSwiZXhwIjoxNzM2NjIxNzkxfQ.aI4GpXOmGJK-ueYxysQimjP1qMQyhYUEZ4pSwgKVCXQ"   -H "Content-Type: multipart/form-data"   -F "pdf_file=@/home/kevin/repos/resume_service/CVENG.pdf"
 
 curl -X POST "http://localhost:8008/resumes/create_resume" \
 -H "accept: application/json" \

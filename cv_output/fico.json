@@ -1,0 +1,313 @@
+{
+    "education_details":[
+       {
+          "education_level":"Master's Degree",
+          "institution":"Università degli Studi di Genova",
+          "field_of_study":"Computer Science",
+          "final_evaluation_grade":"110/110 cum laude",
+          "start_date":"2023",
+          "year_of_completion":"2025",
+          "exam":null
+       },
+       {
+          "education_level":"Bachelor's Degree",
+          "institution":"Università degli Studi di Genova",
+          "field_of_study":"Informatics",
+          "final_evaluation_grade":"110/110 cum laude",
+          "start_date":"2020",
+          "year_of_completion":"2023",
+          "exam":{
+             "Dissertation/thesis title":"DATA MANAGEMENT ARCHITECTURES IN PILLS: AN EXPERIMENT IN INNOVATIVE SCIENTIFIC COMMUNICATION",
+             "Dissertation/thesis subject":"INFORMATICS"
+          }
+       },
+       {
+          "education_level":"Technical Certificate",
+          "institution":"Istituto Superiore Statale Majorana",
+          "field_of_study":"Telecommunications and Information Systems",
+          "final_evaluation_grade":"100/100 cum laude",
+          "start_date":null,
+          "year_of_completion":"2020",
+          "exam":null
+       },
+       {
+          "education_level":"Course",
+          "institution":"Lewestone School",
+          "field_of_study":"Programming",
+          "final_evaluation_grade":null,
+          "start_date":"2018-01-01",
+          "year_of_completion":"2018",
+          "exam":null
+       }
+    ],
+    "experience_details":[
+       {
+          "position":"Scholarship holder",
+          "company":"Università di Genova",
+          "employment_period":"04/2024 - 10/2024",
+          "location":"Genova (GE)",
+          "industry":"Information systems, EDP",
+          "key_responsibilities":[
+             "Python programmer for a research grant on prosumer markets",
+             "Published simulation tool and two papers"
+          ],
+          "skills_acquired":[
+             "Simulation",
+             "Python",
+             "scientific papers"
+          ]
+       },
+       {
+          "position":"Author",
+          "company":"Land Editore",
+          "employment_period":"10/2022 - 10/2024",
+          "location":"Torino (TO)",
+          "industry":"Press, publishing, graphics",
+          "key_responsibilities":[
+             "Author of the book 'Lathar'",
+             "Writing a book, teamwork for editing, marketing, and personal branding"
+          ],
+          "skills_acquired":[
+             "Writing",
+             "teamwork",
+             "personal branding"
+          ]
+       },
+       {
+          "position":"GDSCRIPT Programmer",
+          "company":"In proprio",
+          "employment_period":"07/2024 - 09/2024",
+          "location":"Genova (GE)",
+          "industry":"Engineering and design",
+          "key_responsibilities":[
+             "3D video game programming for Steam publishing",
+             "Programming in GDSCRIPT"
+          ],
+          "skills_acquired":[
+             "Programming in GDSCRIPT",
+             "teamwork with division of skills and features"
+          ]
+       },
+       {
+          "position":"(Re)Programming Flutter Application 'The world is your toilet'",
+          "company":"In proprio",
+          "employment_period":"05/2024 - 08/2024",
+          "location":"Genova (GE)",
+          "industry":"Information systems, EDP",
+          "key_responsibilities":[
+             "Flutter Programming"
+          ],
+          "skills_acquired":[
+             "Flutter"
+          ]
+       },
+       {
+          "position":"Android Programmer",
+          "company":"In proprio",
+          "employment_period":"01/2024 - 04/2024",
+          "location":"Genova (GE)",
+          "industry":"Information systems, EDP",
+          "key_responsibilities":[
+             "Programming 'The world is your toilet'",
+             "Released on Google Play Store"
+          ],
+          "skills_acquired":[
+             "Android Studio",
+             "marketing",
+             "Google Play Console"
+          ]
+       },
+       {
+          "position":"Reply Ambassador",
+          "company":"Reply",
+          "employment_period":"09/2023 - 04/2024",
+          "location":"Genova (GE)",
+          "industry":"Marketing/Communication",
+          "key_responsibilities":[
+             "Programmer and Event Organizer"
+          ],
+          "skills_acquired":[
+             "Cyberchallenge World Champions",
+             "Interviewed on behalf of Reply"
+          ]
+       },
+       {
+          "position":"Creatore di contenuti",
+          "company":"Università di Genova",
+          "employment_period":"07/2022 - 10/2022",
+          "location":"Genova (GE)",
+          "industry":null,
+          "key_responsibilities":[
+             "Creation of videos for the Databases course"
+          ],
+          "skills_acquired":[
+             "Deepening knowledge of database theory",
+             "videomaking",
+             "writing"
+          ]
+       },
+       {
+          "position":"Software Analyst",
+          "company":"Land Editore",
+          "employment_period":"06/2022 - 09/2022",
+          "location":"Torino (TO)",
+          "industry":"Engineering and design",
+          "key_responsibilities":[
+             "Development of QR CODE system for a restaurant"
+          ],
+          "skills_acquired":[
+             "C# programming",
+             "game development"
+          ]
+       },
+       {
+          "position":"Programmer and Designer",
+          "company":"Ristorante Patanegra",
+          "employment_period":"07/2020 - 07/2020",
+          "location":"Genova (GE)",
+          "industry":"Engineering and design",
+          "key_responsibilities":[
+             "Proposed solution for QR code design"
+          ],
+          "skills_acquired":[
+             "Communication with customers and attention to their needs"
+          ]
+       },
+       {
+          "position":"Software Analyst",
+          "company":"Sumasoftware S.R.L.",
+          "employment_period":"10/2018 - 10/2018",
+          "location":"Genova (GE)",
+          "industry":"Engineering and design",
+          "key_responsibilities":[
+             "Management website project",
+             "Manual testing of programs"
+          ],
+          "skills_acquired":[
+             "PHP, HTML, CSS, JAVASCRIPT"
+          ]
+       },
+       {
+          "position":"Intern",
+          "company":"Netalia S.R.L.",
+          "employment_period":"06/2018 - 06/2018",
+          "location":"Genova (GE)",
+          "industry":"Engineering and design",
+          "key_responsibilities":[
+             "Processing of materials",
+             "Report on company activities"
+          ],
+          "skills_acquired":[
+             "Public speaking",
+             "Cloud networks"
+          ]
+       },
+       {
+          "position":"Software Analyst",
+          "company":"Fast Fone",
+          "employment_period":"02/2018 - 02/2018",
+          "location":"Genova (GE)",
+          "industry":"Engineering and design",
+          "key_responsibilities":[
+             "PHP Programming",
+             "Web Ubuntu and Operating Systems Hardware Component Replacement"
+          ],
+          "skills_acquired":[
+             "PHP Programming Using OS Ubuntu"
+          ]
+       },
+       {
+          "position":"Tech Youtuber",
+          "company":"YouTuber di tecnologia",
+          "employment_period":"2016 - 2020",
+          "location":null,
+          "industry":null,
+          "key_responsibilities":[
+             "Creating content"
+          ],
+          "skills_acquired":[
+             
+          ]
+       }
+    ],
+    "projects":[
+       {
+          "name":"Talk al Festival della Scienza",
+          "description":"Talk on the relationship between programming a video game and writing a book, with the collaboration of the Councilor for Culture Angela Villani.",
+          "link":"www.bibliotechedigenova.it/evento/32530"
+       }
+    ],
+    "achievements":[
+       {
+          "name":"Eccellenza MIUR",
+          "description":"Enhancement of Italian Excellence - MIUR"
+       }
+    ],
+    "certifications":[
+       
+    ],
+    "languages":[
+       {
+          "language":"Italian",
+          "proficiency":"Native"
+       },
+       {
+          "language":"English",
+          "proficiency":"C1"
+       }
+    ],
+    "interests":null,
+    "self_identification":{
+       "gender":null,
+       "pronouns":null,
+       "veteran":null,
+       "disability":null,
+       "ethnicity":null
+    },
+    "legal_authorization":{
+       "eu_work_authorization":"Yes",
+       "us_work_authorization":"No",
+       "requires_us_visa":"No",
+       "legally_allowed_to_work_in_us":"No",
+       "requires_us_sponsorship":"No",
+       "requires_eu_visa":"No",
+       "legally_allowed_to_work_in_eu":"Yes",
+       "requires_eu_sponsorship":"No",
+       "canada_work_authorization":"No",
+       "requires_canada_visa":"No",
+       "legally_allowed_to_work_in_canada":"No",
+       "requires_canada_sponsorship":"No",
+       "uk_work_authorization":"No",
+       "requires_uk_visa":"No",
+       "legally_allowed_to_work_in_uk":"No",
+       "requires_uk_sponsorship":"No"
+    },
+    "work_preferences":{
+       "remote_work":"Yes",
+       "in_person_work":"Yes",
+       "open_to_relocation":"Yes",
+       "willing_to_complete_assessments":"Yes",
+       "willing_to_undergo_drug_tests":"No",
+       "willing_to_undergo_background_checks":"Yes"
+    },
+    "availability":{
+       "notice_period":"1 month"
+    },
+    "salary_expectations":{
+       "salary_range_usd":null
+    },
+    "personal_information":{
+       "name":"Lorenzo",
+       "surname":"Foschi",
+       "date_of_birth":"03/04/2001",
+       "country":"Italy",
+       "city":"Genova",
+       "address":"Via di Creto 61, 16165 Genova",
+       "zip_code":null,
+       "phone_prefix":"+39",
+       "phone":"3888187772",
+       "email":"lorenzo.foschi.work@gmail.com",
+       "github":"https://ihcsof.github.io/lorenzofoschi",
+       "linkedin":null
+    }
+ }

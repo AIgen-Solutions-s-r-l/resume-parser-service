@@ -29,7 +29,7 @@ Ensure you have the following installed:
 1. Clone the repository:
    ```bash
    git clone <repository-url>
-   cd resume_service-main
+   cd resume_service
    ```
 
 2. Install dependencies:
@@ -37,11 +37,7 @@ Ensure you have the following installed:
    pip install -r requirements.txt
    ```
 
-3. Set up environment variables in a `.env` file:
-   ```env
-   MONGODB=mongodb://localhost:27017
-   RABBITMQ_URL=amqp://guest:guest@localhost:5672/
-   ```
+3. Set up environment variables by renaming `.env.example` to `.env`.
 
 4. Run the service:
    ```bash

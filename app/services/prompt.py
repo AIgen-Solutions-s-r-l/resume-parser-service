@@ -7,11 +7,11 @@ Extract relevant information from the text with extreme accuracy, reading line b
 - Carefully read through the entire file content
 - Comply strictly with the provided JSON schema.
 - If you encounter any unclear formatting in the original content, use your judgment.
-
 - Populate fields with values extracted from the text. If no data is found for a field, set it to null.
 - Do not add extra fields not defined in the schema.
 - The final output must be a single line of valid JSON, with no backticks, code blocks, or escape characters.
 - Do not exclude any content from the page.
+- Do not include any other section into the JSON Schema other than the one provided.
 
 
 ### JSON SCHEMA:

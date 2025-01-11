@@ -4,12 +4,10 @@ import os
 import logging
 import base64
 import re
-import requests
-import time
 
 from io import BytesIO
 from pathlib import Path
-from typing import IO, List, Dict, Any
+from typing import List, Dict, Any
 from tempfile import NamedTemporaryFile
 
 from pdf2image import convert_from_path
@@ -18,22 +16,14 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 from app.services.prompt import BASE_OCR_PROMPT
 
-
-from docling.backend.docling_parse_backend import DoclingParseDocumentBackend
 from docling.datamodel.base_models import InputFormat
 from docling.datamodel.pipeline_options import (
     AcceleratorDevice,
     AcceleratorOptions,
     PdfPipelineOptions,
-    TesseractCliOcrOptions,
-    TesseractOcrOptions,
+    EasyOcrOptions
 )
 from docling.document_converter import DocumentConverter, PdfFormatOption
-
-
-
-
-
 
 logger = logging.getLogger(__name__)
 
@@ -52,8 +42,8 @@ class ResumeParser:
         :param model_name: Name of the model with vision + text capabilities.
         :param openai_api_key: Your OpenAI API key.
         """
-        #self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
-        self.openai_api_key = "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"
+        self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
+        # self.openai_api_key = "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"
         if not self.openai_api_key:
             raise ValueError("OpenAI API key not provided.")
 
@@ -143,10 +133,24 @@ class ResumeParser:
         """
         return self._convert_sync(pdf_path)
 
+    def extract_links_from_pdf(self, pdf_file_path):
+        # Open the PDF file
+        with open(pdf_file_path, 'rb') as fp:
+            content = fp.read()
+            
+            # Use regular expression to find sequences of printable characters
+            potential_strings = re.findall(b'[ -~]{%d,}' % 10, content)
+            
+            urls = []
+            url_pattern = r'http[s]?://(?:[a-zA-Z0-9$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+            
+            # Convert byte sequences to strings
+            for s in potential_strings:
+                found_url = re.findall(url_pattern, s.decode('ascii', errors='ignore'))
+                urls.extend(found_url)
+                
+        return urls
     
-    
-    
-
     async def _external_ocr(self, pdf_path: str) -> str:
         """
         Sends the PDF to an external OCR service and polls for the result.
@@ -159,20 +163,14 @@ class ResumeParser:
             num_threads=8, device=AcceleratorDevice.CPU
         )
 
-
-
-
-
         pipeline_options = PdfPipelineOptions()
         pipeline_options.accelerator_options = accelerator_options
         pipeline_options.do_ocr = True
         pipeline_options.do_table_structure = True
         pipeline_options.table_structure_options.do_cell_matching = True
 
-    	#TODO da capire le differnze    
-        #ocr_options = TesseractCliOcrOptions(force_full_page_ocr=True)
+        ocr_options = EasyOcrOptions(force_full_page_ocr=True)
         
-        ocr_options = TesseractCliOcrOptions()
         pipeline_options.ocr_options = ocr_options
 
         converter = DocumentConverter(
@@ -187,7 +185,7 @@ class ResumeParser:
         md = doc.export_to_markdown()
         return(md)
 
-    async def _combine_ocr_results(self, external_markdown: str, llm_response: str) -> str:
+    async def _combine_ocr_results(self, external_markdown: str, llm_response: str, links: str) -> str:
         """
         Calls the LLM again to combine the external OCR results (markdown) with
         the LLM-based OCR results (JSON-like) into a single cohesive JSON result.
@@ -195,14 +193,17 @@ class ResumeParser:
         You can refine the prompt depending on the expected structure of the inputs and outputs.
         """
         combination_prompt = (
-            "You are given two OCR outputs from the same resume:\n\n"
+            "You are given three OCR outputs from the same resume:\n\n"
             "1) EXTERNAL OCR (markdown):\n"
             f"{external_markdown}\n\n"
             "2) LLM OCR (JSON-like):\n"
             f"{llm_response}\n\n"
+            "3) LINKS OCR:\n\n"
+            f"{links}\n\n"
             "Please combine them into a single well-structured JSON resume. "
-            "Use the external OCR text to fill in any missing details from the LLM OCR result, "
+            "Use the external OCR text and the links OCR to fill in any missing details from the LLM OCR result, "
             "and if there are conflicts, choose the most accurate information. "
+            "Don't include a separate section for links."
             "Provide only the json code for the resume, without any explanations or additional text and also without ```json ```"
         )
 
@@ -234,15 +235,18 @@ class ResumeParser:
             external_markdown, llm_response = await asyncio.gather(
                 external_markdown_task, llm_response_task
             )
-
+            
             # Handle empty results
             if not external_markdown.strip():
                 logger.warning("External OCR returned empty or invalid content.")
             if not llm_response.strip():
                 logger.warning("LLM OCR returned empty or invalid content.")
 
+            # Get links
+            links = self.extract_links_from_pdf(tmp_file_path)
+
             # Step 3: Combine both results via another LLM call
-            combined_response = await self._combine_ocr_results(external_markdown, llm_response)
+            combined_response = await self._combine_ocr_results(external_markdown, llm_response, links)
             
             # Attempt to repair the final combined JSON
             try:

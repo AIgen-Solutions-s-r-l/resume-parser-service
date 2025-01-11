@@ -1,0 +1,225 @@
+{
+    "personal_information": {
+        "name": "Lorenzo",
+        "surname": "Foschi",
+        "date_of_birth": "03/04/2001",
+        "country": "Italy",
+        "city": "Genova",
+        "address": "Via di Creto 61, 16165 Genova",
+        "zip_code": null,
+        "phone_prefix": "+39",
+        "phone": "3888187772",
+        "email": "lorenzo.foschi.work@gmail.com",
+        "github": "ihcsof.github.io/lorenzofoschi",
+        "linkedin": null
+    },
+    "education_details": [
+        {
+            "education_level": "Master's Degree",
+            "institution": "Università degli Studi di Genova",
+            "field_of_study": "Computer Science",
+            "final_evaluation_grade": "110/110 cum laude",
+            "start_date": "2023",
+            "year_of_completion": "2025",
+            "exam": null
+        },
+        {
+            "education_level": "Bachelor's Degree",
+            "institution": "Università degli Studi di Genova",
+            "field_of_study": "Informatics",
+            "final_evaluation_grade": "110/110 cum laude",
+            "start_date": "2020",
+            "year_of_completion": "2023",
+            "exam": {
+                "Dissertation/thesis title": "DATA MANAGEMENT ARCHITECTURES IN PILLS: AN EXPERIMENT IN INNOVATIVE SCIENTIFIC COMMUNICATION",
+                "Dissertation/thesis subject": "INFORMATICS"
+            }
+        },
+        {
+            "education_level": "Technical Certificate",
+            "institution": "Istituto Superiore Statale Majorana",
+            "field_of_study": "Telecommunications",
+            "final_evaluation_grade": "100/100 cum laude",
+            "start_date": null,
+            "year_of_completion": "2020",
+            "exam": null
+        }
+    ],
+    "experience_details": [
+        {
+            "position": "Scholarship holder",
+            "company": "Università di Genova",
+            "employment_period": "04/2024 - 10/2024",
+            "location": "Genova",
+            "industry": "Information systems, EDP",
+            "key_responsibilities": [
+                "Python programmer for a research grant on prosumer markets",
+                "Publishing a simulation tool and two papers"
+            ],
+            "skills_acquired": [
+                "Simulation",
+                "Python",
+                "Scientific papers"
+            ]
+        },
+        {
+            "position": "Author",
+            "company": "Land Editore",
+            "employment_period": "10/2022 - 10/2024",
+            "location": "Torino",
+            "industry": "Press, publishing, graphics",
+            "key_responsibilities": [
+                "Author of the book 'Lathar'",
+                "Teamwork for editing, marketing and personal branding"
+            ],
+            "skills_acquired": [
+                "Writing a book"
+            ]
+        },
+        {
+            "position": "GDSCRIPT Programmer",
+            "company": "In Proprio",
+            "employment_period": "07/2024 - 09/2024",
+            "location": "Genova",
+            "industry": "Engineering and design",
+            "key_responsibilities": [
+                "3D video game programming for Steam publishing",
+                "Using the 'GODOT' engine and GDSCRIPT language"
+            ],
+            "skills_acquired": [
+                "Programming in GDSCRIPT",
+                "Teamwork"
+            ]
+        },
+        {
+            "position": "(Re)Programming Flutter Application",
+            "company": "In Proprio",
+            "employment_period": "05/2024 - 08/2024",
+            "location": "Genova",
+            "industry": "Information systems, EDP",
+            "key_responsibilities": [
+                "Flutter Programmer for the application 'The world is your toilet'"
+            ],
+            "skills_acquired": [
+                "Flutter"
+            ]
+        },
+        {
+            "position": "Android Programmer",
+            "company": "In Proprio",
+            "employment_period": "01/2024 - 04/2024",
+            "location": "Genova",
+            "industry": "Information systems, EDP",
+            "key_responsibilities": [
+                "Programming 'The world is your toilet' released on Google Play Store"
+            ],
+            "skills_acquired": [
+                "Android Studio",
+                "Google Play Console",
+                "AdMob"
+            ]
+        },
+        {
+            "position": "Reply Ambassador",
+            "company": "Reply",
+            "employment_period": "09/2023 - 04/2024",
+            "location": "Genova",
+            "industry": "Marketing/Communication",
+            "key_responsibilities": [
+                "Event Organizer for Cyberchallenge World Champions"
+            ],
+            "skills_acquired": [
+                "Computer Programmer"
+            ]
+        },
+        {
+            "position": "Creatore di contenuti",
+            "company": "Università di Genova",
+            "employment_period": "07/2022 - 10/2022",
+            "location": "Genova",
+            "industry": null,
+            "key_responsibilities": [
+                "Creation of videos for the Databases course"
+            ],
+            "skills_acquired": [
+                "Knowledge of database theory",
+                "Videomaking"
+            ]
+        },
+        {
+            "position": "Tech Youtuber",
+            "company": "Land Editore",
+            "employment_period": "2016",
+            "location": "Torino",
+            "industry": "YouTube",
+            "key_responsibilities": [
+                "Create content"
+            ],
+            "skills_acquired": []
+        }
+    ],
+    "projects": [
+        {
+            "name": "Talk al Festival della Scienza",
+            "description": "Talk on the relationship between programming a video game and writing a book, with the collaboration of the Councilor for Culture Angela Villani.",
+            "link": "www.bibliotechedigenova.it/evento/32530"
+        }
+    ],
+    "achievements": [
+        {
+            "name": "Eccellenza MIUR",
+            "description": "Enhancement of Italian Excellence - MIUR"
+        }
+    ],
+    "certifications": [],
+    "languages": [
+        {
+            "language": "Italian",
+            "proficiency": "Native"
+        },
+        {
+            "language": "English",
+            "proficiency": "C1"
+        }
+    ],
+    "interests": [],
+    "availability": {
+        "notice_period": null
+    },
+    "salary_expectations": {
+        "salary_range_usd": null
+    },
+    "self_identification": {
+        "gender": null,
+        "pronouns": null,
+        "veteran": null,
+        "disability": null,
+        "ethnicity": null
+    },
+    "legal_authorization": {
+        "eu_work_authorization": null,
+        "us_work_authorization": null,
+        "requires_us_visa": null,
+        "legally_allowed_to_work_in_us": null,
+        "requires_us_sponsorship": null,
+        "requires_eu_visa": null,
+        "legally_allowed_to_work_in_eu": null,
+        "requires_eu_sponsorship": null,
+        "canada_work_authorization": null,
+        "requires_canada_visa": null,
+        "legally_allowed_to_work_in_canada": null,
+        "requires_canada_sponsorship": null,
+        "uk_work_authorization": null,
+        "requires_uk_visa": null,
+        "legally_allowed_to_work_in_uk": null,
+        "requires_uk_sponsorship": null
+    },
+    "work_preferences": {
+        "remote_work": null,
+        "in_person_work": null,
+        "open_to_relocation": null,
+        "willing_to_complete_assessments": null,
+        "willing_to_undergo_drug_tests": null,
+        "willing_to_undergo_background_checks": null
+    }
+}
