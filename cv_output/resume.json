@@ -2,11 +2,9 @@
     "personal_information": {
         "name": "FEDERICO",
         "surname": "ELIA",
-        "date_of_birth": null,
         "country": "Ireland",
         "city": "Dublin",
         "address": "Dublin 1",
-        "zip_code": null,
         "phone_prefix": "+353",
         "phone": "892338335",
         "email": "fedembare@gmail.com",
@@ -35,7 +33,7 @@
             "company": "BlockChain Rush",
             "employment_period": "01/2022 – Present",
             "location": "Italy",
-            "industry": null,
+            "industry": "Software Development",
             "key_responsibilities": [
                 "Co-founded and led a startup specializing in app and software development with a focus on blockchain technology.",
                 "Provided blockchain consultations for 10+ companies, enhancing their software capabilities with secure, decentralized solutions.",
@@ -48,12 +46,12 @@
             "company": "University of Genoa",
             "employment_period": "11/2022 – 03/2024",
             "location": "Genoa, Italy",
-            "industry": null,
+            "industry": "Research",
             "key_responsibilities": [
                 "Conducted in-depth research on IoT security, focusing on binary instrumentation and runtime monitoring, with an emphasis on applying binary instrumentation techniques to enhance IoT systems security.",
-                "Performed in-depth study of the MQTT protocol, and Falco(open-source security tool utilizing binary instrumentation) analyzing its core operations and security implications in IoT environments.",
+                "Performed in-depth study of the MQTT protocol, and analysis of its core operations and security implications in IoT environments.",
                 "Developed multiple software components including MQTT packet analysis library, Falco adapter, and RML monitor in Prolog.",
-                "Authored thesis \"Binary Instrumentation for Runtime Monitoring of Internet of Things Systems Using Falco\"."
+                "Authored thesis 'Binary Instrumentation for Runtime Monitoring of Internet of Things Systems Using Falco'."
             ],
             "skills_acquired": []
         },
@@ -62,10 +60,10 @@
             "company": "Galliera Hospital",
             "employment_period": "02/2023 – 08/2023",
             "location": "Genoa, Italy",
-            "industry": null,
+            "industry": "Healthcare",
             "key_responsibilities": [
-                "Took on key responsibilities in integrating and enforcing robust security protocols, ensuring that all software functionalities complied with the latest cybersecurity standards and effectively mitigated potential threats.",
-                "Played an integral role as part of the hospital's cybersecurity team, developing and maintaining a critical software tool for password validation used by over 1,600 employees, identifying that 20% of passwords were weak or compromised."
+                "Played an integral role as part of the hospital's cybersecurity team, developing and maintaining a critical software tool for password validation used by over 1,600 employees, identifying that 20% of passwords were weak or compromised.",
+                "Took on responsibilities in integrating and enforcing robust security protocols, ensuring that all software functionalities complied with the latest cybersecurity standards and effectively mitigated potential threats."
             ],
             "skills_acquired": []
         }
@@ -74,7 +72,7 @@
         {
             "name": "AIHawk",
             "description": "GitHub Recognition: Gained over 12000 stars on GitHub in 3 weeks, indicating rapid recognition and positive reception in the developer community.",
-            "link": "https://github.com/feder-cr/linkedIn_auto_jobs_applier_with_AI"
+            "link": "https://github.com/feder-cr"
         },
         {
             "name": "Custom Resume and Cover Letter",
@@ -123,29 +121,29 @@
         "ethnicity": null
     },
     "legal_authorization": {
-        "eu_work_authorization": "Yes",
-        "us_work_authorization": "No",
-        "requires_us_visa": "Yes",
-        "legally_allowed_to_work_in_us": "No",
-        "requires_us_sponsorship": "Yes",
-        "requires_eu_visa": "No",
-        "legally_allowed_to_work_in_eu": "Yes",
-        "requires_eu_sponsorship": "No",
-        "canada_work_authorization": "No",
-        "requires_canada_visa": "Yes",
-        "legally_allowed_to_work_in_canada": "No",
-        "requires_canada_sponsorship": "Yes",
-        "uk_work_authorization": "No",
-        "requires_uk_visa": "Yes",
-        "legally_allowed_to_work_in_uk": "No",
-        "requires_uk_sponsorship": "Yes"
+        "eu_work_authorization": null,
+        "us_work_authorization": null,
+        "requires_us_visa": null,
+        "legally_allowed_to_work_in_us": null,
+        "requires_us_sponsorship": null,
+        "requires_eu_visa": null,
+        "legally_allowed_to_work_in_eu": null,
+        "requires_eu_sponsorship": null,
+        "canada_work_authorization": null,
+        "requires_canada_visa": null,
+        "legally_allowed_to_work_in_canada": null,
+        "requires_canada_sponsorship": null,
+        "uk_work_authorization": null,
+        "requires_uk_visa": null,
+        "legally_allowed_to_work_in_uk": null,
+        "requires_uk_sponsorship": null
     },
     "work_preferences": {
-        "remote_work": "No",
-        "in_person_work": "Yes",
-        "open_to_relocation": "Yes",
-        "willing_to_complete_assessments": "Yes",
-        "willing_to_undergo_drug_tests": "Yes",
-        "willing_to_undergo_background_checks": "Yes"
+        "remote_work": null,
+        "in_person_work": null,
+        "open_to_relocation": null,
+        "willing_to_complete_assessments": null,
+        "willing_to_undergo_drug_tests": null,
+        "willing_to_undergo_background_checks": null
     }
 }

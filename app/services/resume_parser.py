@@ -7,7 +7,7 @@ import re
 
 from io import BytesIO
 from pathlib import Path
-from typing import IO, List, Dict, Any
+from typing import List, Dict, Any
 from tempfile import NamedTemporaryFile
 
 from pdf2image import convert_from_path
@@ -24,14 +24,6 @@ from docling.datamodel.pipeline_options import (
     EasyOcrOptions
 )
 from docling.document_converter import DocumentConverter, PdfFormatOption
-
-# from pdfminer.high_level import extract_text
-from pdfminer.layout import LAParams
-from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
-from pdfminer.pdfpage import PDFPage
-from pdfminer.converter import HTMLConverter
-import io
-import re
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +42,8 @@ class ResumeParser:
         :param model_name: Name of the model with vision + text capabilities.
         :param openai_api_key: Your OpenAI API key.
         """
-        #self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
-        self.openai_api_key = "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"
+        self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
+        # self.openai_api_key = "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"
         if not self.openai_api_key:
             raise ValueError("OpenAI API key not provided.")
 
@@ -144,32 +136,13 @@ class ResumeParser:
     def extract_links_from_pdf(self, pdf_file_path):
         # Open the PDF file
         with open(pdf_file_path, 'rb') as fp:
-            # Create a resource manager and a device to hold the extracted data
-            # rsrcmgr = PDFResourceManager()
-            # retstr = io.StringIO()
-            # laparams = LAParams()
-            # device = HTMLConverter(rsrcmgr, retstr, laparams=laparams)
-            
-            # interpreter = PDFPageInterpreter(rsrcmgr, device)
-            
-            # # Iterate over all pages in the PDF file
-            # for page in PDFPage.get_pages(fp):
-            #     interpreter.process_page(page)
-            
-            # # Get the extracted text
-            # text = retstr.getvalue()
-            # print(text)
-            # # Extract URLs using a regular expression
-            # urls = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', text)
-            
-            # Open the file in binary mode to avoid encoding issues
             content = fp.read()
             
             # Use regular expression to find sequences of printable characters
             potential_strings = re.findall(b'[ -~]{%d,}' % 10, content)
             
             urls = []
-            url_pattern = r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+            url_pattern = r'http[s]?://(?:[a-zA-Z0-9$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
             
             # Convert byte sequences to strings
             for s in potential_strings:
@@ -229,8 +202,9 @@ class ResumeParser:
             "3) LINKS OCR:\n\n"
             f"{links}\n\n"
             "Please combine them into a single well-structured JSON resume. "
-            "Use the external OCR text to fill in any missing details from the LLM OCR result, "
+            "Use the external OCR text and the links OCR to fill in any missing details from the LLM OCR result, "
             "and if there are conflicts, choose the most accurate information. "
+            "Don't include a separate section for links."
             "Provide only the json code for the resume, without any explanations or additional text and also without ```json ```"
         )
 
