@@ -1,0 +1,285 @@
+{
+    "personal_information": {
+        "name": "Lorenzo",
+        "surname": "Foschi",
+        "date_of_birth": "03/04/2001",
+        "country": "Italy",
+        "city": "Genova",
+        "address": "Via di Creto 61",
+        "zip_code": "16165",
+        "phone": "3888187772",
+        "email": "lorenzo.foschi.work@gmail.com",
+        "github": "https://github.com/lorenzofoschi",
+        "linkedin": null
+    },
+    "education_details": [
+        {
+            "education_level": "Bachelor's Degree",
+            "institution": "Università degli Studi di Genova",
+            "field_of_study": "Informatics",
+            "final_evaluation_grade": "110/110 cum laude",
+            "start_date": "2020",
+            "year_of_completion": "2023",
+            "exam": {}
+        },
+        {
+            "education_level": "Master's Degree",
+            "institution": "Università degli Studi di Genova",
+            "field_of_study": "Computer Science MS",
+            "final_evaluation_grade": null,
+            "start_date": "2023",
+            "year_of_completion": "2025",
+            "exam": {}
+        },
+        {
+            "education_level": "Technical Certificate",
+            "institution": "Vocational School, Technological sector",
+            "field_of_study": "Information systems and telecommunications",
+            "final_evaluation_grade": "100/100 cum laude",
+            "start_date": null,
+            "year_of_completion": "2020",
+            "exam": {}
+        },
+        {
+            "education_level": null,
+            "institution": "ITS",
+            "field_of_study": "Business systems, Arduino, JS, Node.js",
+            "final_evaluation_grade": null,
+            "start_date": "2019",
+            "year_of_completion": null,
+            "exam": {}
+        }
+    ],
+    "experience_details": [
+        {
+            "position": "Scholarship holder",
+            "company": "Università di Genova",
+            "employment_period": "02/2024 - 10/2024",
+            "location": "Genova",
+            "industry": "Information systems, EDP",
+            "key_responsibilities": [
+                "Python programmer for a research grant on prosumer markets"
+            ],
+            "skills_acquired": [
+                "Simulation, Python, scientific papers"
+            ]
+        },
+        {
+            "position": "Author",
+            "company": "Land Editore",
+            "employment_period": "10/2022 - 10/2024",
+            "location": "Torino",
+            "industry": "Press, publishing, graphics",
+            "key_responsibilities": [
+                "Author of the book 'Lathar'",
+                "Author of the book 'Lathar-Zero', to be released in 2025"
+            ],
+            "skills_acquired": [
+                "Writing a book, teamwork for editing, marketing and personal branding"
+            ]
+        },
+        {
+            "position": "GDSCRIPT Programmer",
+            "company": "In Proprio",
+            "employment_period": "07/2024 - 09/2024",
+            "location": "Genova",
+            "industry": "Engineering and design",
+            "key_responsibilities": [
+                "3D video game programming for Steam publishing"
+            ],
+            "skills_acquired": [
+                "Programming in GDSCRIPT, teamwork with division of skills and features"
+            ]
+        },
+        {
+            "position": "(Re)Programming Flutter Application 'The world is your toilet'",
+            "company": "In Proprio",
+            "employment_period": "05/2024 - 08/2024",
+            "location": "Genova",
+            "industry": "Information systems, EDP",
+            "key_responsibilities": [
+                "Flutter Programmer"
+            ],
+            "skills_acquired": [
+                "Flutter"
+            ]
+        },
+        {
+            "position": "Android Programmer",
+            "company": "Attivita In Proprio",
+            "employment_period": "01/2024 - 04/2024",
+            "location": "Genova",
+            "industry": "Information systems, EDP",
+            "key_responsibilities": [
+                "Android Application Programming 'The world is your toilet'"
+            ],
+            "skills_acquired": [
+                "Android Studio, marketing, Google Play Console, AdMob"
+            ]
+        },
+        {
+            "position": "Reply Ambassador",
+            "company": "Reply",
+            "employment_period": "09/2023 - 04/2024",
+            "location": "Genova",
+            "industry": "Marketing/Communication",
+            "key_responsibilities": [
+                "Computer Programmer and Event Organizer"
+            ],
+            "skills_acquired": [
+                "Reply Cyberchallenge World Champions (Wreck The Line)"
+            ]
+        },
+        {
+            "position": "Creatore di contenuti",
+            "company": "Università di Genova",
+            "employment_period": "07/2022 - 10/2022",
+            "location": "Genova",
+            "industry": "Education, training, research and development",
+            "key_responsibilities": [
+                "Creator of videos for the Databases course"
+            ],
+            "skills_acquired": [
+                "Deepening my knowledge of database theory and deepening my knowledge of videomaking and writing"
+            ]
+        },
+        {
+            "position": "Software Analyst",
+            "company": "Land Editore",
+            "employment_period": "06/2022 - 09/2022",
+            "location": "Torino",
+            "industry": "Engineering and design",
+            "key_responsibilities": [
+                "Development, in pairs, of the video game of my book 'Lathar'"
+            ],
+            "skills_acquired": [
+                "Game development, C# programming, Unity usage"
+            ]
+        },
+        {
+            "position": "Programmer and Designer",
+            "company": "Ristorante Patanegra",
+            "employment_period": "07/2020 - 07/2020",
+            "location": "Genova",
+            "industry": "Engineering and design",
+            "key_responsibilities": [
+                "Request for the development of a QR CODE system"
+            ],
+            "skills_acquired": [
+                "Communication with the customer and attention to their needs"
+            ]
+        },
+        {
+            "position": "Software Analyst",
+            "company": "Sumasoftware S.R.L",
+            "employment_period": "10/2018 - 10/2018",
+            "location": "Genova",
+            "industry": "Engineering and design",
+            "key_responsibilities": [
+                "Management website project; Manual testing of programs"
+            ],
+            "skills_acquired": [
+                "Using PHP, HTML, CSS, JAVASCRIPT"
+            ]
+        },
+        {
+            "position": "Intern",
+            "company": "Netalia S.R.L",
+            "employment_period": "06/2018 - 06/2018",
+            "location": "Genova",
+            "industry": "Engineering and design",
+            "key_responsibilities": [
+                "Processing of materials; Study of company activities"
+            ],
+            "skills_acquired": [
+                "Public speaking, Cloud networks (CaaS, ...)"
+            ]
+        },
+        {
+            "position": "Software Analyst",
+            "company": "Fast Fone",
+            "employment_period": "02/2018 - 02/2018",
+            "location": "Genova",
+            "industry": "Engineering and design",
+            "key_responsibilities": [
+                "PHP Programming, Web Ubuntu and Operating Systems Hardware Component Replacement"
+            ],
+            "skills_acquired": [
+                "PHP Programming Using OS Ubuntu"
+            ]
+        }
+    ],
+    "projects": [
+        {
+            "name": "Talk al Festival della Scienza",
+            "description": "Talk on the relationship between programming a video game and writing a book, with the collaboration of the Councilor for Culture Angela Villani.",
+            "link": "www.bibliotechedigenova.it/evento/32530"
+        }
+    ],
+    "achievements": [
+        {
+            "name": "Eccellenza MIUR",
+            "description": "Enhancement of Italian Excellence - MIUR"
+        }
+    ],
+    "certifications": [
+        {
+            "name": "PET",
+            "description": "Cambridge Assessment, 19/07/2018 - B1"
+        },
+        {
+            "name": "FCE",
+            "description": "Cambridge Assessment, 29/05/2019 - B2"
+        }    
+    ],
+    "languages": [
+        {
+            "language": "Italian",
+            "proficiency": "Mother tongue"
+        },
+        {
+            "language": "English",
+            "proficiency": "C1"
+        }
+    ],
+    "interests": [],
+    "availability": {
+        "notice_period": "Available"
+    },
+    "salary_expectations": {
+        "salary_range_usd": null
+    },
+    "self_identification": {
+        "gender": null,
+        "pronouns": null,
+        "veteran": null,
+        "disability": null,
+        "ethnicity": null
+    },
+    "legal_authorization": {
+        "eu_work_authorization": null,
+        "us_work_authorization": null,
+        "requires_us_visa": null,
+        "legally_allowed_to_work_in_us": null,
+        "requires_us_sponsorship": null,
+        "requires_eu_visa": null,
+        "legally_allowed_to_work_in_eu": null,
+        "requires_eu_sponsorship": null,
+        "canada_work_authorization": null,
+        "requires_canada_visa": null,
+        "legally_allowed_to_work_in_canada": null,
+        "requires_canada_sponsorship": null,
+        "uk_work_authorization": null,
+        "requires_uk_visa": null,
+        "legally_allowed_to_work_in_uk": null,
+        "requires_uk_sponsorship": null
+    },
+    "work_preferences": {
+        "remote_work": null,
+        "in_person_work": null,
+        "open_to_relocation": null,
+        "willing_to_complete_assessments": null,
+        "willing_to_undergo_drug_tests": null,
+        "willing_to_undergo_background_checks": null
+    }
+}

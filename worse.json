@@ -1,0 +1,267 @@
+{
+    "personal_information": {
+        "name": "LORENZO",
+        "surname": "FOSCHI",
+        "date_of_birth": "03/04/2001",
+        "country": "Italy",
+        "city": "GENOVA",
+        "address": "Via di Creto 61, 16165 GENOVA",
+        "zip_code": null,
+        "phone_prefix": "+39",
+        "phone": "3888187772",
+        "email": "lorenzo.foschi.work@gmail.com",
+        "github": "https://ihcsof.github.io/lorenzofoschi",
+        "linkedin": null
+    },
+    "education_details": [
+        {
+            "education_level": "Master's Degree",
+            "institution": "Università degli Studi di GENOVA",
+            "field_of_study": "Computer Science",
+            "final_evaluation_grade": "110/110 cum laude",
+            "start_date": "2023",
+            "year_of_completion": "2025",
+            "exam": {}
+        },
+        {
+            "education_level": "Bachelor's Degree",
+            "institution": "Università degli Studi di GENOVA",
+            "field_of_study": "Informatics",
+            "final_evaluation_grade": "110/110 cum laude",
+            "start_date": "2020",
+            "year_of_completion": "2023",
+            "exam": {
+                "Dissertation/thesis title": "DATA MANAGEMENT ARCHITECTURES IN PILLS: AN EXPERIMENT IN INNOVATIVE SCIENTIFIC COMMUNICATION",
+                "Dissertation/thesis subject": "INFORMATICS"
+            }
+        }
+    ],
+    "experience_details": [
+        {
+            "position": "Scholarship holder",
+            "company": "UNIVERSITÀ DI GENOVA",
+            "employment_period": "04/2024 - 10/2024",
+            "location": "GENOVA (GE)",
+            "industry": "Information systems, EDP",
+            "key_responsibilities": [
+                "Python programmer for a research grant on prosumer markets, aimed at publishing a simulation tool and two papers"
+            ],
+            "skills_acquired": [
+                "Simulation",
+                "Python",
+                "scientific papers"
+            ]
+        },
+        {
+            "position": "Author",
+            "company": "LAND EDITORE",
+            "employment_period": "10/2022 - 10/2024",
+            "location": "TORINO (TO)",
+            "industry": "Press, publishing, graphics",
+            "key_responsibilities": [
+                "Author of the book 'Lathar', released on October 10, 2022",
+                "Author of the book 'Lathar-Zero', to be released in 2025"
+            ],
+            "skills_acquired": [
+                "Writing a book",
+                "teamwork for editing, marketing and personal branding"
+            ]
+        },
+        {
+            "position": "GDSCRIPT Programmer",
+            "company": "IN PROPRIO",
+            "employment_period": "07/2024 - 09/2024",
+            "location": "GENOVA (GE)",
+            "industry": "Engineering and design",
+            "key_responsibilities": [
+                "3D video game programming for Steam publishing, using the 'GODOT' engine and the GDSCRIPT language"
+            ],
+            "skills_acquired": [
+                "Programming in GDSCRIPT",
+                "use of the engine",
+                "teamwork with division of skills and features",
+                "github management"
+            ]
+        },
+        {
+            "position": "(Re)Programming Flutter Application 'The world is your toilet'",
+            "company": "IN PROPRIO",
+            "employment_period": "05/2024 - 08/2024",
+            "location": "GENOVA (GE)",
+            "industry": "Information systems, EDP",
+            "key_responsibilities": [
+                "Flutter Programmer"
+            ],
+            "skills_acquired": [
+                "Flutter"
+            ]
+        },
+        {
+            "position": "Android Programmer",
+            "company": "ATTIVITÀ IN PROPRIO",
+            "employment_period": "01/2024 - 04/2024",
+            "location": "GENOVA (GE)",
+            "industry": "Information systems, EDP",
+            "key_responsibilities": [
+                "Android Application Programming 'The world is your toilet' Released on Google Play Store"
+            ],
+            "skills_acquired": [
+                "Android Studio",
+                "marketing",
+                "Google Play Console",
+                "AdMob"
+            ]
+        },
+        {
+            "position": "Reply Ambassador",
+            "company": "REPLY",
+            "employment_period": "09/2023 - 04/2024",
+            "location": "GENOVA (GE)",
+            "industry": "Marketing/Communication",
+            "key_responsibilities": [
+                "Computer Programmer and Event Organizer"
+            ],
+            "skills_acquired": [
+                "Cyberchallenge World Champions (Wreck The Line) Interviewed on behalf of Reply"
+            ]
+        },
+        {
+            "position": "Creatore di contenuti",
+            "company": "UNIVERSITÀ DI GENOVA",
+            "employment_period": "07/2022 - 10/2022",
+            "location": "GENOVA (GE)",
+            "industry": null,
+            "key_responsibilities": [
+                "Creation of videos for the Databases course, as an integral part of the thesis and which are now university course material."
+            ],
+            "skills_acquired": [
+                "Deepening my knowledge of database theory and deepening my knowledge of videomaking and writing"
+            ]
+        },
+        {
+            "position": "Software Analyst",
+            "company": "LAND EDITORE",
+            "employment_period": "06/2022 - 09/2022",
+            "location": "TORINO (TO)",
+            "industry": "Engineering and design",
+            "key_responsibilities": [
+                "Development of QR CODE system for the restaurant in Genoa."
+            ],
+            "skills_acquired": [
+                "Game development",
+                "C# programming",
+                "Unity usage"
+            ]
+        },
+        {
+            "position": "Programmer and Designer",
+            "company": "RISTORANTE PATANEGRA",
+            "employment_period": "07/2020 - 07/2020",
+            "location": "GENOVA (GE)",
+            "industry": "Engineering and design",
+            "key_responsibilities": [
+                "Request for the development of a QR CODE system for the Patanegra restaurant in Genoa."
+            ],
+            "skills_acquired": [
+                "Communication with the customer and attention to their needs"
+            ]
+        },
+        {
+            "position": "Software Analyst",
+            "company": "SUMASOFTWARE S.R.L",
+            "employment_period": "10/2018 - 10/2018",
+            "location": "GENOVA (GE)",
+            "industry": "Engineering and design",
+            "key_responsibilities": [
+                "Manual testing of programs"
+            ],
+            "skills_acquired": [
+                "PHP",
+                "HTML",
+                "CSS",
+                "JAVASCRIPT",
+                "Publishing and working on websites"
+            ]
+        },
+        {
+            "position": "Intern",
+            "company": "NETALIA S.R.L",
+            "employment_period": "06/2018 - 06/2018",
+            "location": "GENOVA (GE)",
+            "industry": "Engineering and design",
+            "key_responsibilities": [
+                "Processing of materials; Report on activities"
+            ],
+            "skills_acquired": [
+                "Public speaking",
+                "Cloud networks (CaaS)"
+            ]
+        },
+        {
+            "position": "Software Analyst",
+            "company": "FAST FONE",
+            "employment_period": "02/2018 - 02/2018",
+            "location": "GENOVA (GE)",
+            "industry": "Engineering and design",
+            "key_responsibilities": [
+                "PHP Programming"
+            ],
+            "skills_acquired": [
+                "PHP Programming Using OS Ubuntu"
+            ]
+        }
+    ],
+    "projects": [],
+    "achievements": [],
+    "certifications": [],
+    "languages": [
+        {
+            "language": "Italian",
+            "proficiency": "Mother tongue"
+        },
+        {
+            "language": "English",
+            "proficiency": "C1"
+        }
+    ],
+    "interests": [],
+    "availability": {
+        "notice_period": "Immediate"
+    },
+    "salary_expectations": {
+        "salary_range_usd": "50000-60000"
+    },
+    "self_identification": {
+        "gender": "No",
+        "pronouns": "No",
+        "veteran": "No",
+        "disability": "No",
+        "ethnicity": "No"
+    },
+    "legal_authorization": {
+        "eu_work_authorization": "Yes",
+        "us_work_authorization": "No",
+        "requires_us_visa": "No",
+        "legally_allowed_to_work_in_us": "No",
+        "requires_us_sponsorship": "No",
+        "requires_eu_visa": "No",
+        "legally_allowed_to_work_in_eu": "Yes",
+        "requires_eu_sponsorship": "No",
+        "canada_work_authorization": "No",
+        "requires_canada_visa": "No",
+        "legally_allowed_to_work_in_canada": "No",
+        "requires_canada_sponsorship": "No",
+        "uk_work_authorization": "No",
+        "requires_uk_visa": "No",
+        "legally_allowed_to_work_in_uk": "No",
+        "requires_uk_sponsorship": "No"
+    },
+    "work_preferences": {
+        "remote_work": "Yes",
+        "in_person_work": "Yes",
+        "open_to_relocation": "Yes",
+        "willing_to_complete_assessments": "Yes",
+        "willing_to_undergo_drug_tests": "No",
+        "willing_to_undergo_background_checks": "Yes"
+    }
+}
