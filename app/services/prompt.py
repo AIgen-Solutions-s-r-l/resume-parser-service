@@ -12,6 +12,7 @@ Extract relevant information from the text with extreme accuracy, reading line b
 - Do not add extra fields not defined in the schema.
 - The final output must be a single line of valid JSON, with no backticks, code blocks, or escape characters.
 - Do not exclude any content from the page.
+- Do not include a separate section for links.
 
 
 ### JSON SCHEMA:
