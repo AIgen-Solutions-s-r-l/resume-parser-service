@@ -11,7 +11,7 @@ class PersonalInformation(BaseModel):
     country: Optional[str] = None
     city: Optional[str] = None
     address: Optional[str] = None
-    zip_code: Optional[str] = Field(None, min_length=5, max_length=10)
+    zip_code: Optional[str] = Field(None, max_length=10)
     phone_prefix: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[EmailStr] = None

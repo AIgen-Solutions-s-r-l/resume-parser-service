@@ -8,6 +8,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "app.main:app",  # Passa l'applicazione come stringa di importazione
         host="0.0.0.0",
-        port=8006,
+        port=8010,
         reload=True  # Attiva il riavvio automatico quando i file cambiano
     )
