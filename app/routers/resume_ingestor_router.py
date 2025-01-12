@@ -240,20 +240,39 @@ async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get
         else:
             resume_json_str = resume_json
 
-        if not resume_json:
-            logger.error(
-                "Failed to generate resume JSON from PDF",
-                extra={"event_type": "resume_generation_error", "user_id": current_user},
-            )
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to generate resume JSON from the PDF."
-            )
-        logger.info(
-            "Resume JSON generated successfully",
-            extra={"event_type": "resume_json_generated", "user_id": current_user},
-        )
-        
-        return PdfJsonResume.model_validate_json(resume_json_str)
+        # Retry the validation once if it fails (Only ONE retry)
+        for attempt in range(2):
+            try:
+                if not resume_json:
+                    logger.error(
+                        "Failed to generate resume JSON from PDF",
+                        extra={"event_type": "resume_generation_error", "user_id": current_user},
+                    )
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Failed to generate resume JSON from the PDF.",
+                    )
+                logger.info(
+                    "Resume JSON generated successfully",
+                    extra={"event_type": "resume_json_generated", "user_id": current_user},
+                )
+                return PdfJsonResume.model_validate_json(resume_json_str)
+            except Exception as validation_error:
+                if attempt == 1:
+                    logger.error(
+                        f"Validation attempt {attempt + 1} failed: {validation_error}",
+                        exc_info=True,
+                        extra={"event_type": "resume_validation_error", "user_id": current_user},
+                    )
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Validation failed for the resume JSON.",
+                    )
+                logger.warning(
+                    f"Validation attempt {attempt + 1} failed, retrying...",
+                    extra={"event_type": "resume_validation_retry", "user_id": current_user},
+                )
+
     except Exception as e:
         logger.error(
             "Unexpected error during PDF to JSON conversion: " + str(e),
