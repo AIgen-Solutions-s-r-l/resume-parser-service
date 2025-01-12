@@ -1,0 +1,18 @@
+         2736705 function calls (2619786 primitive calls) in 77.617 seconds
+
+   Ordered by: cumulative time
+   List reduced from 4650 to 10 due to restriction <10>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  870/715   36.588    0.042   47.560    0.067 {method 'poll' of 'select.poll' objects}
+    26/12    2.552    0.098   28.981    2.415 serialization.py:1794(persistent_load)
+   175/68    0.365    0.002   28.769    0.423 socket_checker.py:45(select)
+    17/14    0.001    0.000   23.188    1.656 threading.py:637(wait)
+ 4305/102    0.007    0.000   22.673    0.222 module.py:1732(_wrapped_call_impl)
+      256    1.165    0.005   15.739    0.061 container.py:248(forward)
+ 4305/102    1.146    0.000   15.512    0.152 module.py:1740(_call_impl)
+      857    0.002    0.000   14.838    0.017 conv.py:553(forward)
+      6/2    0.001    0.000   14.416    7.208 monitor.py:241(_check_server)
+      6/2    0.000    0.000   14.318    7.159 monitor.py:284(_check_once)
+
+
