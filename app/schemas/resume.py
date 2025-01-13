@@ -301,12 +301,11 @@ class ResumeBase(BaseModel):
 
 
 class AddResume(ResumeBase):
-    user_id: Optional[int] = None
-    personal_information: Optional[PersonalInformation] = None
+    user_id: Optional[int]
+    personal_information: Optional[PersonalInformation]
 
 
 class UpdateResume(ResumeBase):
-    user_id: Optional[int] = None
     personal_information: Optional[PersonalInformation] = None
 
 
