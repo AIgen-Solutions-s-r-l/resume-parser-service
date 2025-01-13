@@ -41,7 +41,8 @@ class EducationDetails(BaseModel):
     final_evaluation_grade: Optional[str] = None
     start_date: Optional[str] = None
     year_of_completion: Optional[Union[int, str]] = None
-    exam: Optional[Union[List[Dict[str, str]], Dict[str, str], ExamDetails]] = None
+    exam: Optional[Union[List[Dict[str, str]],
+                         Dict[str, str], ExamDetails]] = None
 
 
 class ExperienceDetails(BaseModel):
@@ -145,19 +146,10 @@ class ResumeBase(BaseModel):
         return text
 
     def model_dump(self, exclude_unset: bool = True) -> dict:
-        import os
-        from langchain_openai import OpenAIEmbeddings
 
-        openai_api_key = os.getenv("OPENAI_API_KEY")
-        if not openai_api_key:
-            raise ValueError("OpenAI API key is missing. Please set the 'OPENAI_API_KEY' environment variable.")
-
-        try:
-            embeddings = OpenAIEmbeddings(model="text-embedding-ada-002", openai_api_key=openai_api_key)
-            vector = embeddings.embed_query(self.to_text())
-        except Exception as e:
-            raise RuntimeError(f"Failed to generate embeddings: {e}")
-
+        from app.libs.text_embedder import TextEmbedder
+        text_embedder = TextEmbedder()
+        vector = text_embedder.embed_query(self.to_text())
         result = super().model_dump(exclude_unset=exclude_unset)
         result["vector"] = vector
         return result
