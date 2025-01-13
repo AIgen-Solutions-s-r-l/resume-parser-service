@@ -1,7 +1,6 @@
 from pydantic import BaseModel, EmailStr, AnyUrl, Field, field_serializer
 from typing import Optional, List, Dict, Union
 from pydantic_core import Url
-from langchain.embeddings.openai import OpenAIEmbeddings
 
 
 class PersonalInformation(BaseModel):
@@ -146,7 +145,6 @@ class ResumeBase(BaseModel):
         return text
 
     def model_dump(self, exclude_unset: bool = True) -> dict:
-
         from app.libs.text_embedder import TextEmbedder
         text_embedder = TextEmbedder()
         vector = text_embedder.embed_query(self.to_text())
