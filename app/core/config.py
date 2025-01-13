@@ -19,9 +19,6 @@ class Settings(BaseSettings):
     json_logs: bool = True
     log_retention: str = "7 days"
 
-    # RabbitMQ settings
-    rabbitmq_url: str = "amqp://guest:guest@localhost:5672/"
-
     # MongoDB settings
     mongodb_host: str = "localhost"
     mongodb_port: int = 27017
