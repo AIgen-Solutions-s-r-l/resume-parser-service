@@ -294,7 +294,9 @@ class ResumeBase(BaseModel):
     def model_dump(self, exclude_unset: bool = True) -> dict:
         from app.libs.text_embedder import TextEmbedder
         text_embedder = TextEmbedder()
-        self.vector = text_embedder.get_embeddings(self.to_text())
+        # get_embeddings returns List[List[float]], we want the first embedding
+        embeddings = text_embedder.get_embeddings(self.to_text())
+        self.vector = embeddings[0] if embeddings else None
         return super().model_dump(exclude_unset=exclude_unset)
 
 
