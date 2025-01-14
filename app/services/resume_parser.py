@@ -207,7 +207,8 @@ class ResumeParser:
             "Use the external OCR text and the links OCR to fill in any missing details from the LLM OCR result, "
             "and if there are conflicts, choose the most accurate information. "
             "Don't include a separate section for links."
-            "Provide only the json code for the resume, without any explanations or additional text and also without ```json ```"
+            "Don't add any other section or field that is not part of the provided JSON structure."
+            "Provide only the json code for the resume, without any explanations or additional text and also without ```json ```."
         )
         
         # # Prompt for not using any intermediary llm
