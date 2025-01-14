@@ -1,0 +1,171 @@
+{
+    "personal_information": {
+        "name": "Federico",
+        "surname": "Elia",
+        "date_of_birth": null,
+        "country": "Ireland",
+        "city": "Dublin",
+        "address": "Dublin 1, Ireland",
+        "zip_code": null,
+        "phone_prefix": "+353",
+        "phone": "892338335",
+        "email": "fedembare@gmail.com",
+        "github": "https://github.com/feder-cr",
+        "linkedin": null
+    },
+    "education_details": [
+        {
+            "university": "University of Genoa",
+            "degree": "Bachelor's Degree",
+            "field_of_study": "Computer Science",
+            "gpa": "4/4",
+            "courses": [
+                {
+                    "name": "Algorithm Analysis and Design",
+                    "gpa": "4"
+                },
+                {
+                    "name": "Object-Oriented Languages and Programming",
+                    "gpa": "4"
+                },
+                {
+                    "name": "Linear Algebra and Numerical Analysis",
+                    "gpa": "4"
+                },
+                {
+                    "name": "Artificial Intelligence",
+                    "gpa": "4"
+                }
+            ],
+            "location": "Genoa, Italy",
+            "dates": "2020 - 2023"
+        }
+    ],
+    "experience_details": [
+        {
+            "company": "BlockChain Rush",
+            "position": "Co-Founder & Software Engineer",
+            "dates": "01/2022 - Present",
+            "achievements": [
+                {
+                    "description": "Co-founded and led a startup specializing in app and software development with a focus on blockchain technology."
+                },
+                {
+                    "description": "Provided blockchain consultations for 10+ companies, enhancing their software capabilities with secure, decentralized solutions."
+                },
+                {
+                    "description": "Developed blockchain applications, integrated cutting-edge technology to meet client needs and drive industry innovation."
+                }
+            ],
+            "location": null
+        },
+        {
+            "company": "University of Genoa",
+            "position": "Research Intern",
+            "dates": "11/2023 - 03/2024",
+            "achievements": [
+                {
+                    "description": "Conducted in-depth research on IoT security, focusing on binary instrumentation and runtime monitoring, with an emphasis on applying binary instrumentation techniques to enhance IoT systems security."
+                },
+                {
+                    "description": "Performed in-depth study of the MQTT protocol, and Falco(open-source security tool utilizing binary instrumentation) analyzing its core operations and security implications in IoT environments."
+                },
+                {
+                    "description": "Developed multiple software components including MQTT packet analysis library, Falco adapter, and RML monitor in Prolog."
+                },
+                {
+                    "description": "Authored thesis \"Binary Instrumentation for Runtime Monitoring of Internet of Things Systems Using Falco\""
+                }
+            ],
+            "location": "Genoa, Italy"
+        },
+        {
+            "company": "Galliera Hospital",
+            "position": "Software Engineer",
+            "dates": "02/2023 - 08/2023",
+            "achievements": [
+                {
+                    "description": "Took on key responsibilities in integrating and enforcing robust security protocols, ensuring that all software functionalities complied with the latest cybersecurity standards and effectively mitigated potential threats."
+                },
+                {
+                    "description": "Played an integral role as part of the hospital's cybersecurity team, developing and maintaining a critical software tool for password validation used by over 1,600 employees, identifying that 20% of passwords were weak or compromised."
+                }
+            ],
+            "location": "Genoa, Italy"
+        }
+    ],
+    "projects": [
+        {
+            "name": "AIHawk",
+            "description": "Github Repo, Gained over 12000 stars on GitHub in 3 weeks, indicating rapid recognition and positive reception in the developer community.",
+            "github": "https://github.com/feder-cr"
+        },
+        {
+            "name": "Custom Resume and Cover Letter",
+            "description": "Automatically generates tailored resumes and cover letters based on specific job requirements."
+        },
+        {
+            "name": "Automated Job Applications",
+            "description": "Created an AI-driven tool to automate and personalize job applications on Linkedin, improving efficiency and reducing application time."
+        }
+    ],
+    "achievements": [
+        {
+            "description": "Winner of an Italian public competition, Won first place in a public competition with a perfect score of 70/70, securing a Software Developer position at Galliera Hospital."
+        },
+        {
+            "description": "Liguria Region Merit Scholarship, Awarded annually from 2020 to 2023 in recognition of academic excellence and contribution."
+        }
+    ],
+    "certifications": [],
+    "languages": [
+        {
+            "name": "Italian",
+            "level": "Native"
+        },
+        {
+            "name": "English",
+            "level": "Professional"
+        }
+    ],
+    "interests": [],
+    "availability": {
+        "notice_period": null
+    },
+    "salary_expectations": {
+        "salary_range_usd": null
+    },
+    "self_identification": {
+        "gender": null,
+        "pronouns": null,
+        "veteran": null,
+        "disability": null,
+        "ethnicity": null
+    },
+    "legal_authorization": {
+        "eu_work_authorization": null,
+        "us_work_authorization": null,
+        "requires_us_visa": null,
+        "legally_allowed_to_work_in_us": null,
+        "requires_us_sponsorship": null,
+        "requires_eu_visa": null,
+        "legally_allowed_to_work_in_eu": null,
+        "requires_eu_sponsorship": null,
+        "canada_work_authorization": null,
+        "requires_canada_visa": null,
+        "legally_allowed_to_work_in_canada": null,
+        "requires_canada_sponsorship": null,
+        "uk_work_authorization": null,
+        "requires_uk_visa": null,
+        "legally_allowed_to_work_in_uk": null,
+        "requires_uk_sponsorship": null
+    },
+    "work_preferences": {
+        "remote_work": null,
+        "in_person_work": null,
+        "open_to_relocation": null,
+        "willing_to_complete_assessments": null,
+        "willing_to_undergo_drug_tests": null,
+        "willing_to_undergo_background_checks": null
+    }
+}
