@@ -1,0 +1,202 @@
+{
+    "personal_information": {
+        "name": "Lorenzo",
+        "surname": "Foschi",
+        "date_of_birth": "03/04/2001",
+        "country": "Italy",
+        "city": "GENOVA",
+        "address": "Via di Creto 61",
+        "zip_code": "16165",
+        "phone_prefix": "39",
+        "phone": "3888187772",
+        "email": "lorenzo.foschi.work@gmail.com",
+        "github": "https://ihcsof.github.io/lorenzofoschi",
+        "linkedin": null
+    },
+    "education_details": [
+        {
+            "education_level": "Master's Degree",
+            "institution": "Università di Genova",
+            "field_of_study": "Computer Science MS",
+            "final_evaluation_grade": "110/110 cum laude",
+            "start_date": "2023",
+            "year_of_completion": "2025",
+            "exam": null
+        },
+        {
+            "education_level": "Bachelor's Degree",
+            "institution": "Università degli Studi di GENOVA",
+            "field_of_study": "Informatics",
+            "final_evaluation_grade": "110/110 cum laude",
+            "start_date": "2020",
+            "year_of_completion": "2023",
+            "exam": {
+                "DATA MANAGEMENT ARCHITECTURES IN PILLS: AN EXPERIMENT IN INNOVATIVE SCIENTIFIC COMMUNICATION": "110/110 cum laude"
+            }
+        }
+    ],
+    "experience_details": [
+        {
+            "position": "GDSCRIPT Programmer",
+            "company": "IN PROPRIO",
+            "employment_period": "07/2024 - 09/2024",
+            "location": "GENOVA (GE)",
+            "industry": "Computer science, data processing and acquisition",
+            "key_responsibilities": [
+                "Programming in GDSCRIPT for a 3D video game",
+                "Managing github repo"
+            ],
+            "skills_acquired": [
+                "GDSCRIPT",
+                "teamwork",
+                "github management"
+            ]
+        },
+        {
+            "position": "Android Programmer",
+            "company": "ATTIVITÀ IN PROPRIO",
+            "employment_period": "01/2024 - 04/2024",
+            "location": "GENOVA (GE)",
+            "industry": "Computer science, data processing and acquisition",
+            "key_responsibilities": [
+                "Developing Android applications"
+            ],
+            "skills_acquired": [
+                "Android Studio",
+                "Marketing",
+                "Google Play Console",
+                "AdMob"
+            ]
+        },
+        {
+            "position": "Reply Ambassador",
+            "company": "REPLY",
+            "employment_period": "09/2023 - 04/2024",
+            "location": "GENOVA (GE)",
+            "industry": "Computer science, data processing and acquisition",
+            "key_responsibilities": [
+                "Participating in Reply Cyberchallenge"
+            ],
+            "skills_acquired": [
+                "Public speaking"
+            ]
+        },
+        {
+            "position": "Creatore di contenuti",
+            "company": "UNIVERSITÀ DI GENOVA",
+            "employment_period": "07/2022 - 10/2022",
+            "location": "GENOVA (GE)",
+            "industry": "Education, training, research and development",
+            "key_responsibilities": [
+                "Creating videos for university courses"
+            ],
+            "skills_acquired": [
+                "Videomaking",
+                "Writing"
+            ]
+        },
+        {
+            "position": "Software Analyst",
+            "company": "LAND EDITORE",
+            "employment_period": "06/2022 - 09/2022",
+            "location": "TORINO (TO)",
+            "industry": "Computer science, data processing and acquisition",
+            "key_responsibilities": [
+                "Developing a video game based on my book"
+            ],
+            "skills_acquired": [
+                "Game development",
+                "C# programming",
+                "Unity usage"
+            ]
+        },
+        {
+            "position": "Intern",
+            "company": "NETALIA S.R.L",
+            "employment_period": "06/2018 - 06/2018",
+            "location": "GENOVA (GE)",
+            "industry": "Computer science, data processing and acquisition",
+            "key_responsibilities": [
+                "PHP Programming",
+                "Web Ubuntu and Operating Systems"
+            ],
+            "skills_acquired": [
+                "PHP Programming",
+                "Using OS Ubuntu"
+            ]
+        }
+    ],
+    "projects": [
+        {
+            "name": "The world is your toilet",
+            "description": "Android Application Programming, released on Google Play Store",
+            "link": null
+        }
+    ],
+    "achievements": [
+        {
+            "name": "Author of the book 'Lathar'",
+            "description": "Released on October 10, 2022, by Land Editore"
+        },
+        {
+            "name": "Reply Cyberchallenge World Champions",
+            "description": "Participated in the Reply Cyberchallenge and interviewed on behalf of Reply"
+        }
+    ],
+    "certifications": [
+        {
+            "name": "Digital Competences",
+            "description": "Proficient user in Information and data literacy, Communication and collaboration, Digital content creation, Safety, and Problem solving."
+        }
+    ],
+    "languages": [
+        {
+            "language": "Italian",
+            "proficiency": "MOTHER TONGUE"
+        },
+        {
+            "language": "English",
+            "proficiency": "EXCELLENT"
+        }
+    ],
+    "interests": [],
+    "availability": {
+        "notice_period": "null"
+    },
+    "salary_expectations": {
+        "salary_range_usd": "null"
+    },
+    "self_identification": {
+        "gender": "null",
+        "pronouns": "null",
+        "veteran": "null",
+        "disability": "null",
+        "ethnicity": "null"
+    },
+    "legal_authorization": {
+        "eu_work_authorization": "Yes",
+        "us_work_authorization": "No",
+        "requires_us_visa": "No",
+        "legally_allowed_to_work_in_us": "No",
+        "requires_us_sponsorship": "No",
+        "requires_eu_visa": "No",
+        "legally_allowed_to_work_in_eu": "Yes",
+        "requires_eu_sponsorship": "No",
+        "canada_work_authorization": "No",
+        "requires_canada_visa": "No",
+        "legally_allowed_to_work_in_canada": "No",
+        "requires_canada_sponsorship": "No",
+        "uk_work_authorization": "No",
+        "requires_uk_visa": "No",
+        "legally_allowed_to_work_in_uk": "No",
+        "requires_uk_sponsorship": "No"
+    },
+    "work_preferences": {
+        "remote_work": "Yes",
+        "in_person_work": "No",
+        "open_to_relocation": "Yes",
+        "willing_to_complete_assessments": "Yes",
+        "willing_to_undergo_drug_tests": "Yes",
+        "willing_to_undergo_background_checks": "Yes"
+    }
+}

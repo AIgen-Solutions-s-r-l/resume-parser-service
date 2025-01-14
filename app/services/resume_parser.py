@@ -4,26 +4,15 @@ import os
 import logging
 import base64
 import re
-
 from io import BytesIO
-from pathlib import Path
 from typing import List, Dict, Any
 from tempfile import NamedTemporaryFile
-
 from pdf2image import convert_from_path
 from fix_busted_json import repair_json
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 from app.services.prompt import BASE_OCR_PROMPT
-
-from docling.datamodel.base_models import InputFormat
-from docling.datamodel.pipeline_options import (
-    AcceleratorDevice,
-    AcceleratorOptions,
-    PdfPipelineOptions,
-    EasyOcrOptions
-)
-from docling.document_converter import DocumentConverter, PdfFormatOption
+from app.services.read_azure import analyze_read
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +32,6 @@ class ResumeParser:
         :param openai_api_key: Your OpenAI API key.
         """
         self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
-        # self.openai_api_key = "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"
         if not self.openai_api_key:
             raise ValueError("OpenAI API key not provided.")
 
@@ -151,51 +139,15 @@ class ResumeParser:
                 
         return urls
     
-    async def _external_ocr(self, pdf_path: str) -> str:
+    async def _combine_ocr_results(self, external_ocr: str, llm_response: str, links: str) -> str:
         """
-        Sends the PDF to an external OCR service and polls for the result.
-        Returns the markdown text if successful.
-        """
-        input_doc = Path(pdf_path)
-
-
-        accelerator_options = AcceleratorOptions(
-            num_threads=8, device=AcceleratorDevice.CPU
-        )
-
-        pipeline_options = PdfPipelineOptions()
-        pipeline_options.accelerator_options = accelerator_options
-        pipeline_options.do_ocr = True
-        pipeline_options.do_table_structure = True
-        pipeline_options.table_structure_options.do_cell_matching = True
-
-        ocr_options = EasyOcrOptions(force_full_page_ocr=True)
-        
-        pipeline_options.ocr_options = ocr_options
-
-        converter = DocumentConverter(
-            format_options={
-                InputFormat.PDF: PdfFormatOption(
-                    pipeline_options=pipeline_options,
-                )
-            }
-        )
-
-        doc = converter.convert(input_doc).document
-        md = doc.export_to_markdown()
-        return(md)
-
-    async def _combine_ocr_results(self, external_markdown: str, llm_response: str, links: str) -> str:
-        """
-        Calls the LLM again to combine the external OCR results (markdown) with
+        Calls the LLM again to combine the external OCR results with
         the LLM-based OCR results (JSON-like) into a single cohesive JSON result.
-
-        You can refine the prompt depending on the expected structure of the inputs and outputs.
         """
         combination_prompt = (
             "You are given three OCR outputs from the same resume:\n\n"
-            "1) EXTERNAL OCR (markdown):\n"
-            f"{external_markdown}\n\n"
+            "1) EXTERNAL OCR:\n"
+            f"{external_ocr}\n\n"
             "2) LLM OCR (JSON-like):\n"
             f"{llm_response}\n\n"
             "3) LINKS OCR:\n\n"
@@ -204,9 +156,10 @@ class ResumeParser:
             "Use the external OCR text and the links OCR to fill in any missing details from the LLM OCR result, "
             "and if there are conflicts, choose the most accurate information. "
             "Don't include a separate section for links."
-            "Provide only the json code for the resume, without any explanations or additional text and also without ```json ```"
+            "Don't add any other section or field that is not part of the provided JSON structure."
+            "Provide only the json code for the resume, without any explanations or additional text and also without ```json ```."
         )
-
+        
         message = HumanMessage(content=combination_prompt)
         response = await self.llm.ainvoke([message])
         return response.content
@@ -214,39 +167,40 @@ class ResumeParser:
     async def _parse_pdf_bytes_async(self, pdf_bytes: bytes) -> Dict[str, Any]:
         """
         Given PDF bytes, writes them to a temporary file and:
-        1. Gets the external OCR result (markdown).
+        1. Gets the external OCR result (Azure).
         2. Gets the LLM-based OCR result (JSON-like).
-        3. Combines both results via another LLM call.
+        3. Extracts links from the PDF.
+        4. Combines both results via another LLM call.
         """
         loop = asyncio.get_event_loop()
         with NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_file:
             tmp_file.write(pdf_bytes)
             tmp_file_path = tmp_file.name
-
+        
         try:
             # Step 1 & 2: Run external OCR and LLM OCR in parallel
-            external_markdown_task = self._external_ocr(tmp_file_path)
+            external_ocr_task = analyze_read(tmp_file_path)
             
             llm_response_task = loop.run_in_executor(
                 self._executor,
                 lambda: self._parse_pdf_file(tmp_file_path)
             )
 
-            external_markdown, llm_response = await asyncio.gather(
-                external_markdown_task, llm_response_task
+            external_ocr, llm_response = await asyncio.gather(
+                external_ocr_task, llm_response_task
             )
             
-            # Handle empty results
-            if not external_markdown.strip():
+            # Warns for empty results
+            if not external_ocr.strip():
                 logger.warning("External OCR returned empty or invalid content.")
             if not llm_response.strip():
                 logger.warning("LLM OCR returned empty or invalid content.")
 
-            # Get links
+            # Step 3: Extract links from the PDF
             links = self.extract_links_from_pdf(tmp_file_path)
 
-            # Step 3: Combine both results via another LLM call
-            combined_response = await self._combine_ocr_results(external_markdown, llm_response, links)
+            # Step 4: Combine both results via another LLM call
+            combined_response = await self._combine_ocr_results(external_ocr, llm_response, links)
             
             # Attempt to repair the final combined JSON
             try:

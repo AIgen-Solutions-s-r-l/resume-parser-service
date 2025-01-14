@@ -1,0 +1,138 @@
+{
+    "personal_information": {
+        "name": "Lorenzo",
+        "surname": "Foschi",
+        "date_of_birth": "03/04/2001",
+        "country": "Italy",
+        "city": "Genova",
+        "address": "Via di Creto 61, 16165 GENOVA (GE)",
+        "zip_code": "16165",
+        "phone_prefix": null,
+        "phone": "3888187772",
+        "email": "lorenzo.foschi.work@gmail.com",
+        "github": "https://ihcsof.github.io/lorenzofoschi/",
+        "linkedin": null
+    },
+    "education_details": [
+        {
+            "education_level": "Master's Degree",
+            "institution": "Università di Genova",
+            "field_of_study": "Computer Science",
+            "final_evaluation_grade": null,
+            "start_date": "2023",
+            "year_of_completion": "2025",
+            "exam": {}
+        },
+        {
+            "education_level": "Bachelor's Degree",
+            "institution": "Università degli Studi di GENOVA",
+            "field_of_study": "Informatics",
+            "final_evaluation_grade": "110/110 cum laude",
+            "start_date": "2020",
+            "year_of_completion": "2023",
+            "exam": {}
+        }
+    ],
+    "experience_details": [
+        {
+            "position": "Scholarship holder",
+            "company": "Università di Genova",
+            "employment_period": "04/2024 - 10/2024",
+            "location": "Genova (GE)",
+            "industry": "Computer science, data processing and acquisition",
+            "key_responsibilities": [],
+            "skills_acquired": []
+        },
+        {
+            "position": "Author",
+            "company": "LAND EDITORE",
+            "employment_period": "10/2022 - 10/2024",
+            "location": "TORINO (TO)",
+            "industry": "Press, publishing, graphics",
+            "key_responsibilities": [],
+            "skills_acquired": [
+                "Writing a book",
+                "teamwork for editing",
+                "marketing and personal branding"
+            ]
+        },
+        {
+            "position": "GDSCRIPT Programmer",
+            "company": "IN PROPRIO",
+            "employment_period": "07/2024 - 09/2024",
+            "location": "Genova (GE)",
+            "industry": "Computer science, data processing and acquisition",
+            "key_responsibilities": [],
+            "skills_acquired": [
+                "Programming in GDSCRIPT",
+                "use of the engine",
+                "teamwork with division of skills and features",
+                "github repo management"
+            ]
+        }
+    ],
+    "projects": [
+        {
+            "name": "The world is your toilet",
+            "description": "Reprogramming Flutter Application",
+            "link": null
+        }
+    ],
+    "achievements": [
+        {
+            "name": "Reply Cyberchallenge World Champions",
+            "description": "Interviewed on behalf of Reply"
+        }
+    ],
+    "certifications": [],
+    "languages": [
+        {
+            "language": "Italian",
+            "proficiency": "Mother Tongue"
+        },
+        {
+            "language": "English",
+            "proficiency": "C1"
+        }
+    ],
+    "interests": [],
+    "availability": {
+        "notice_period": null
+    },
+    "salary_expectations": {
+        "salary_range_usd": null
+    },
+    "self_identification": {
+        "gender": null,
+        "pronouns": null,
+        "veteran": null,
+        "disability": null,
+        "ethnicity": null
+    },
+    "legal_authorization": {
+        "eu_work_authorization": "Yes",
+        "us_work_authorization": null,
+        "requires_us_visa": null,
+        "legally_allowed_to_work_in_us": null,
+        "requires_us_sponsorship": null,
+        "requires_eu_visa": null,
+        "legally_allowed_to_work_in_eu": "Yes",
+        "requires_eu_sponsorship": null,
+        "canada_work_authorization": null,
+        "requires_canada_visa": null,
+        "legally_allowed_to_work_in_canada": null,
+        "requires_canada_sponsorship": null,
+        "uk_work_authorization": null,
+        "requires_uk_visa": null,
+        "legally_allowed_to_work_in_uk": null,
+        "requires_uk_sponsorship": null
+    },
+    "work_preferences": {
+        "remote_work": null,
+        "in_person_work": null,
+        "open_to_relocation": null,
+        "willing_to_complete_assessments": null,
+        "willing_to_undergo_drug_tests": null,
+        "willing_to_undergo_background_checks": null
+    }
+}

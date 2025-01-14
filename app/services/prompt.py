@@ -11,7 +11,7 @@ Extract relevant information from the text with extreme accuracy, reading line b
 - Do not add extra fields not defined in the schema.
 - The final output must be a single line of valid JSON, with no backticks, code blocks, or escape characters.
 - Do not exclude any content from the page.
-- Do not include any other section into the JSON Schema other than the one provided.
+- Do not include any other section or field into the JSON Schema other than the one provided.
 
 
 ### JSON SCHEMA:
@@ -52,7 +52,8 @@ Extract relevant information from the text with extreme accuracy, reading line b
     "location": string or null,
     "industry": string or null,
     "key_responsibilities": [...],
-    "skills_acquired": [...]
+    "skills_acquired": [...],
+    "links": [...]
     }
 ],
 "projects": [
