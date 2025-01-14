@@ -1,17 +1,9 @@
 BASE_OCR_PROMPT = """
-You are tasked with extracting information from the provided text and formatting it as a JSON resume. Accuracy is paramount. Carefully read the text line by line to ensure all data is transcribed correctly.
-
-Follow the instructions carefully.
-
-Extract relevant information from the text with extreme accuracy, reading line by line to avoid errors, and produce a JSON resume strictly following the schema below. You must:
-- Carefully read through the entire file content
+You MUST:
 - Comply strictly with the provided JSON schema.
-- If you encounter any unclear formatting in the original content, use your judgment.
-- Populate fields with values extracted from the text. If no data is found for a field, set it to null.
-- Do not add extra fields not defined in the schema.
+- DO NOT add extra fields not defined in the schema.
 - The final output must be a single line of valid JSON, with no backticks, code blocks, or escape characters.
-- Do not exclude any content from the page.
-- Do not include any other section or field into the JSON Schema other than the one provided.
+- DO NOT include any other section or field into the JSON Schema other than the one provided.
 
 
 ### JSON SCHEMA:

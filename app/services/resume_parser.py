@@ -144,21 +144,38 @@ class ResumeParser:
         Calls the LLM again to combine the external OCR results with
         the LLM-based OCR results (JSON-like) into a single cohesive JSON result.
         """
-        combination_prompt = (
-            "You are given three OCR outputs from the same resume:\n\n"
-            "1) EXTERNAL OCR:\n"
-            f"{external_ocr}\n\n"
-            "2) LLM OCR (JSON-like):\n"
-            f"{llm_response}\n\n"
-            "3) LINKS OCR:\n\n"
-            f"{links}\n\n"
-            "Please combine them into a single well-structured JSON resume. "
-            "Use the external OCR text and the links OCR to fill in any missing details from the LLM OCR result, "
-            "and if there are conflicts, choose the most accurate information. "
-            "Don't include a separate section for links."
-            "Don't add any other section or field that is not part of the provided JSON structure."
-            "Provide only the json code for the resume, without any explanations or additional text and also without ```json ```."
-        )
+        # combination_prompt = (
+        #     "You are given three OCR outputs from the same resume:\n\n"
+        #     "1) EXTERNAL OCR:\n"
+        #     f"{external_ocr}\n\n"
+        #     "2) LLM OCR (JSON-like):\n"
+        #     f"{llm_response}\n\n"
+        #     "3) LINKS OCR:\n\n"
+        #     f"{links}\n\n"
+        #     "Please combine them into a single well-structured JSON resume. "
+        #     "Use the external OCR text and the links OCR to fill in any missing details from the LLM OCR result, "
+        #     "and if there are conflicts, choose the most accurate information. "
+        #     "Don't include a separate section for links."
+        #     "Don't add any other section or field that is not part of the provided JSON structure."
+        #     "Provide only the json code for the resume, without any explanations or additional text and also without ```json ```."
+        # )
+        
+        combination_prompt = f"""
+            You are given two OCR outputs from the same resume:
+            1. EXTERNAL OCR: {external_ocr}
+            2. LINKS OCR: {links}
+
+            Instructions:
+            - Combine both OCR outputs into a single, well-structured JSON resume.
+            - Use the EXTERNAL OCR as the primary source of information, filling in missing or additional details from the LINKS OCR.
+            - For each field in the provided JSON schema, extract the most relevant, longest, and most detailed information available from both OCR outputs.
+            - In case of conflicting data between EXTERNAL OCR and LINKS OCR, choose the most accurate information based on context (e.g., dates, roles, or responsibilities).
+            - Ensure you do not invent any information. If a field is missing from both OCRs, leave it as null.
+            - For the projects section, add the productions presented in the work descriptions, with their links.
+            - You must strictly adhere to the following JSON schema structure, ensuring that no additional fields or explanations are added outside of the provided template.
+            
+            {BASE_OCR_PROMPT}
+        """
         
         message = HumanMessage(content=combination_prompt)
         response = await self.llm.ainvoke([message])
@@ -179,22 +196,27 @@ class ResumeParser:
         
         try:
             # Step 1 & 2: Run external OCR and LLM OCR in parallel
-            external_ocr_task = analyze_read(tmp_file_path)
+            # external_ocr_task = analyze_read(tmp_file_path)
             
-            llm_response_task = loop.run_in_executor(
-                self._executor,
-                lambda: self._parse_pdf_file(tmp_file_path)
-            )
+            # llm_response_task = loop.run_in_executor(
+            #     self._executor,
+            #     lambda: self._parse_pdf_file(tmp_file_path)
+            # )
 
-            external_ocr, llm_response = await asyncio.gather(
-                external_ocr_task, llm_response_task
-            )
+            # # external_ocr, llm_response = await asyncio.gather(
+            # #     external_ocr_task, llm_response_task
+            # # )
+            
+            # load from output json file
+            with open('output.json', 'r') as f:
+                external_ocr = f.read()
+            llm_response = ""
             
             # Warns for empty results
-            if not external_ocr.strip():
-                logger.warning("External OCR returned empty or invalid content.")
-            if not llm_response.strip():
-                logger.warning("LLM OCR returned empty or invalid content.")
+            # if not external_ocr.strip():
+            #     logger.warning("External OCR returned empty or invalid content.")
+            # if not llm_response.strip():
+            #     logger.warning("LLM OCR returned empty or invalid content.")
 
             # Step 3: Extract links from the PDF
             links = self.extract_links_from_pdf(tmp_file_path)
