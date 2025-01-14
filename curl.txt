@@ -1,6 +1,6 @@
 curl -X POST https://auth.neuraltrading.group/auth/login -H "Content-Type: application/json" -d '{"username": "lorenzo", "password": "12345678"}'
 
-curl -X POST "http://localhost:8010/resumes/pdf_to_json"   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJsb3JlbnpvIiwiaWQiOjgsImlzX2FkbWluIjpmYWxzZSwiZXhwIjoxNzM2NzAzMzc4fQ.czOUTNp5JtL0Dh0hv0RddzEE_Ce6QRliTwpDtQ4N-Rw"   -H "Content-Type: multipart/form-data"   -F "pdf_file=@/home/lorenzo/resume_service/resume2.pdf"
+curl -X POST "http://localhost:8010/resumes/pdf_to_json"   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJsb3JlbnpvIiwiaWQiOjgsImlzX2FkbWluIjpmYWxzZSwiZXhwIjoxNzM2ODYwODI2fQ.ttQl2RXFP2BaOReNoO-GggZUZTfePnsifeS6Q79rYrs"   -H "Content-Type: multipart/form-data"   -F "pdf_file=@/home/kevin/repos/resume_service/FedericoElia.pdf"
 
 curl -X POST "http://localhost:8008/resumes/create_resume" \
 -H "accept: application/json" \
