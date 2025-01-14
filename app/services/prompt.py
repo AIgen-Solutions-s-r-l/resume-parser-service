@@ -52,7 +52,8 @@ Extract relevant information from the text with extreme accuracy, reading line b
     "location": string or null,
     "industry": string or null,
     "key_responsibilities": [...],
-    "skills_acquired": [...]
+    "skills_acquired": [...],
+    "links": [...]
     }
 ],
 "projects": [
