@@ -1,19 +1,14 @@
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
 import os
+import fitz
 import logging
-import base64
-import re
-from io import BytesIO
-from typing import List, Dict, Any
+from concurrent.futures import ThreadPoolExecutor
+from typing import Dict, Any
 from tempfile import NamedTemporaryFile
-from pdf2image import convert_from_path
 from fix_busted_json import repair_json
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 from app.services.prompt import BASE_OCR_PROMPT
 from app.services.read_azure import analyze_read
-import fitz
 
 
 logger = logging.getLogger(__name__)
