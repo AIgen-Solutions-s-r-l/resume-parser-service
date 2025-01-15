@@ -13,14 +13,14 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
 from app.services.prompt import BASE_OCR_PROMPT
 from app.services.read_azure import analyze_read
+import fitz
+
 
 logger = logging.getLogger(__name__)
 
 class ResumeParser:
     """
     A single class that handles:
-    - PDF to images conversion
-    - OCR via a vision-capable LLM model
     - External OCR service
     - JSON extraction and repair
     - Combining results from both approaches via another LLM call
@@ -43,103 +43,30 @@ class ResumeParser:
         )
 
         self._executor: ThreadPoolExecutor | None = None
-
+    
     def set_executor(self, executor: ThreadPoolExecutor):
         """Inject the shared ThreadPoolExecutor after initialization."""
         self._executor = executor
-
-    def _process_file_to_images_base64(self, file_path: str, image_format: str = "PNG") -> List[str]:
-        """
-        Converts a PDF file into a list of base64-encoded images (one per page).
-        """
-        try:
-            images = convert_from_path(file_path)
-            images_base64 = []
-            for image in images:
-                buffered = BytesIO()
-                image.save(buffered, format=image_format)
-                image_base64 = base64.b64encode(buffered.getvalue()).decode("utf-8")
-                images_base64.append(image_base64)
-            return images_base64
-        except Exception as e:
-            raise ValueError(f"Error processing PDF file: {str(e)}")
-
-    async def _send_images_to_model(self, images_data: List[str]) -> str:
-        """
-        Sends a batch of base64-encoded images along with the OCR prompt to the model,
-        and returns the model's response.
-        """
-        images_prompt = [
-            {
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{image_data}"},
-            }
-            for image_data in images_data
-        ]
-
-        message = HumanMessage(
-            content=[
-                {"type": "text", "text": BASE_OCR_PROMPT},
-                *images_prompt,
-            ],
-        )
-        response = await self.llm.ainvoke([message])
-        return str(response.content)
-
-    async def _convert_pdf_to_final_response(self, file_path: str, batch_size: int = 3) -> str:
-        """
-        Orchestrates:
-        - Converting PDF pages to images
-        - Sending them to the model in batches
-        - Combining the responses into a final JSON-like string
-        """
-        pdf_base64_list = self._process_file_to_images_base64(file_path)
-        tasks = [
-            self._send_images_to_model(pdf_base64_list[i : i + batch_size])
-            for i in range(0, len(pdf_base64_list), batch_size)
-        ]
-
-        parsed_chunks = await asyncio.gather(*tasks)
-        final_response = "\n".join(parsed_chunks).strip()
-        return final_response
-
-    def _convert_sync(self, file_path: str) -> str:
-        """
-        A synchronous wrapper to handle the async convert logic.
-        """
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            response = loop.run_until_complete(self._convert_pdf_to_final_response(file_path))
-            return response
-        finally:
-            loop.close()
-
-    def _parse_pdf_file(self, pdf_path: str) -> str:
-        """
-        Directly parse the PDF file using the LLM-based OCR and return raw JSON-like response.
-        """
-        return self._convert_sync(pdf_path)
-
+        
     def extract_links_from_pdf(self, pdf_file_path):
-        # Open the PDF file
-        with open(pdf_file_path, 'rb') as fp:
-            content = fp.read()
-            
-            # Use regular expression to find sequences of printable characters
-            potential_strings = re.findall(b'[ -~]{%d,}' % 10, content)
-            
-            urls = []
-            url_pattern = r'http[s]?://(?:[a-zA-Z0-9$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
-            
-            # Convert byte sequences to strings
-            for s in potential_strings:
-                found_url = re.findall(url_pattern, s.decode('ascii', errors='ignore'))
-                urls.extend(found_url)
+        doc = fitz.open(pdf_file_path)
+        urls = []
                 
+        # Iterate over each page in the PDF
+        for page_num in range(len(doc)):
+            page = doc.load_page(page_num)  # Get the page
+            
+            # Extract links from the page (links can be represented as actions)
+            links = page.get_links()
+            
+            for link in links:
+                if 'uri' in link:
+                    uri = link['uri']
+                    if uri:
+                        urls.append(uri)
         return urls
     
-    async def _combine_ocr_results(self, external_ocr: str, llm_response: str, links: str) -> str:
+    async def _combine_ocr_results(self, external_ocr: str, links: str) -> str:
         """
         Combine the results from the external OCR and extracted links into a single JSON resume.
         """
@@ -170,35 +97,26 @@ class ResumeParser:
         """
         Given PDF bytes, writes them to a temporary file and:
         1. Gets the external OCR result (Azure).
-        2. Gets the LLM-based OCR result (JSON-like).
-        3. Extracts links from the PDF.
-        4. Combines both results via another LLM call.
+        2. Extracts links from the PDF.
+        3. Combines both results via another LLM call.
         """
-        loop = asyncio.get_event_loop()
         with NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_file:
             tmp_file.write(pdf_bytes)
             tmp_file_path = tmp_file.name
         
         try:
             # Step 1: Run external OCR
-            # external_ocr = await asyncio.gather(analyze_read(tmp_file_path))
-            
-            # load from output json file
-            with open('output.json', 'r') as f:
-                external_ocr = f.read()
-            llm_response = ""
+            external_ocr = await analyze_read(tmp_file_path)
             
             # Warns for empty results
-            # if not external_ocr.strip():
-            #     logger.warning("External OCR returned empty or invalid content.")
-            # if not llm_response.strip():
-            #     logger.warning("LLM OCR returned empty or invalid content.")
+            if not external_ocr.strip():
+                logger.warning("External OCR returned empty or invalid content.")
 
-            # Step 3: Extract links from the PDF
+            # Step 2: Extract links from the PDF
             links = self.extract_links_from_pdf(tmp_file_path)
 
-            # Step 4: Combine both results via another LLM call
-            combined_response = await self._combine_ocr_results(external_ocr, llm_response, links)
+            # Step 3: Combine both results via another LLM call
+            combined_response = await self._combine_ocr_results(external_ocr, links)
             
             # Attempt to repair the final combined JSON
             try:
@@ -219,7 +137,6 @@ class ResumeParser:
         """
         Given PDF bytes, extracts and returns a final JSON resume by:
         - Getting external OCR result
-        - Getting LLM OCR result
         - Combining them via an additional LLM call
         - Repairing the final JSON
         """
