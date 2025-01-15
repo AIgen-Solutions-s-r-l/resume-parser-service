@@ -10,7 +10,6 @@ from langchain_core.messages import HumanMessage
 from app.services.prompt import BASE_OCR_PROMPT
 from app.services.read_azure import analyze_read
 
-
 logger = logging.getLogger(__name__)
 
 class ResumeParser:
@@ -21,7 +20,7 @@ class ResumeParser:
     - Combining results from both approaches via another LLM call
     """
 
-    def __init__(self, model_name: str = "gpt-4o-mini", openai_api_key: str = None, executor: ThreadPoolExecutor = None):
+    def __init__(self, model_name: str = "gpt-4o-mini", openai_api_key: str = None):
         """
         :param model_name: Name of the model with vision + text capabilities.
         :param openai_api_key: Your OpenAI API key.
@@ -36,12 +35,6 @@ class ResumeParser:
             model_name=self.model_name,
             openai_api_key=self.openai_api_key
         )
-
-        self._executor: ThreadPoolExecutor | None = None
-    
-    def set_executor(self, executor: ThreadPoolExecutor):
-        """Inject the shared ThreadPoolExecutor after initialization."""
-        self._executor = executor
         
     def extract_links_from_pdf(self, pdf_file_path):
         doc = fitz.open(pdf_file_path)
@@ -100,7 +93,7 @@ class ResumeParser:
             tmp_file_path = tmp_file.name
         
         try:
-            # Step 1: Run external OCR
+            # Step 1: Run external OCR in executor            
             external_ocr = await analyze_read(tmp_file_path)
             
             # Warns for empty results

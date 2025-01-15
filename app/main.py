@@ -9,8 +9,6 @@ from app.core.logging_config import init_logging, test_connection
 from app.routers.resume_ingestor_router import router as resume_router
 from app.services.resume_service import resume_parser
 
-from concurrent.futures import ThreadPoolExecutor
-
 # Inizializza le impostazioni
 settings = Settings()
 
@@ -22,13 +20,7 @@ logger = init_logging(settings)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan context manager per l'applicazione FastAPI."""
-    app.state.executor = ThreadPoolExecutor(max_workers=10)
-    resume_parser.set_executor(app.state.executor)
-
     yield
-
-    app.state.executor.shutdown(wait=True)
 
 # Inizializza l'app FastAPI
 app = FastAPI(
