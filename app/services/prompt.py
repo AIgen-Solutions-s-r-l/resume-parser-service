@@ -1,10 +1,8 @@
 BASE_OCR_PROMPT = """
-You MUST:
+Regarding the following JSON schema, you MUST:
 - Comply strictly with the provided JSON schema.
 - DO NOT add extra fields not defined in the schema.
 - The final output must be a single line of valid JSON, with no backticks, code blocks, or escape characters.
-- DO NOT include any other section or field into the JSON Schema other than the one provided.
-
 
 ### JSON SCHEMA:
 {
@@ -45,7 +43,10 @@ You MUST:
     "industry": string or null,
     "key_responsibilities": [...],
     "skills_acquired": [...],
-    "links": [...]
+    "links": [
+        "link1",
+        "link2"
+    ]
     }
 ],
 "projects": [
@@ -75,43 +76,44 @@ You MUST:
 ],
 "interests": [...],
 "availability": {
-    "notice_period": string
+    "notice_period": string or null
 },
 "salary_expectations": {
-    "salary_range_usd": string
+    "salary_range_usd": string(number) or null
 },
 "self_identification": {
-    "gender": string(Yes or No) or null,
-    "pronouns": string(Yes or No) or null,
-    "veteran": string(Yes or No) or null,
-    "disability": string(Yes or No) or null,
-    "ethnicity": string(Yes or No) or null
+    "gender": "Yes", "No" or null,
+    "pronouns": "Yes", "No" or null or null,
+    "veteran": "Yes", "No" or null,
+    "disability": "Yes", "No" or null,
+    "ethnicity": "Yes", "No" or null
+    "hispanic_or_latino": "Yes", "No" or null,
 },
 "legal_authorization": {
-    "eu_work_authorization": string(Yes or No) or null,
-    "us_work_authorization": string(Yes or No) or null,
-    "requires_us_visa": string(Yes or No) or null,
-    "legally_allowed_to_work_in_us":string(Yes or No) or null,
-    "requires_us_sponsorship": string(Yes or No) or null,
-    "requires_eu_visa": string(Yes or No) or null,
-    "legally_allowed_to_work_in_eu": string(Yes or No) or null,
-    "requires_eu_sponsorship": string(Yes or No) or null,
-    "canada_work_authorization": string(Yes or No) or null,
-    "requires_canada_visa": string(Yes or No) or null,
-    "legally_allowed_to_work_in_canada": string(Yes or No) or null,
-    "requires_canada_sponsorship": string(Yes or No) or null,
-    "uk_work_authorization": string(Yes or No) or null,
-    "requires_uk_visa": string(Yes or No) or null,
-    "legally_allowed_to_work_in_uk": string(Yes or No) or null,
-    "requires_uk_sponsorship": string(Yes or No) or null
+    "eu_work_authorization": "Yes", "No" or null,
+    "us_work_authorization": "Yes", "No" or null,
+    "requires_us_visa": "Yes", "No" or null,
+    "legally_allowed_to_work_in_us":"Yes", "No" or null,
+    "requires_us_sponsorship": "Yes", "No" or null,
+    "requires_eu_visa": "Yes", "No" or null,
+    "legally_allowed_to_work_in_eu": "Yes", "No" or null,
+    "requires_eu_sponsorship": "Yes", "No" or null,
+    "canada_work_authorization": "Yes", "No" or null,
+    "requires_canada_visa": "Yes", "No" or null,
+    "legally_allowed_to_work_in_canada": "Yes", "No" or null,
+    "requires_canada_sponsorship": "Yes", "No" or null,
+    "uk_work_authorization": "Yes", "No" or null,
+    "requires_uk_visa": "Yes", "No" or null,
+    "legally_allowed_to_work_in_uk": "Yes", "No" or null,
+    "requires_uk_sponsorship": "Yes", "No" or null
 },
 "work_preferences": {
-    "remote_work": string(Yes or No) or null,
-    "in_person_work": string(Yes or No) or null,
-    "open_to_relocation": string(Yes or No) or null,
-    "willing_to_complete_assessments": string(Yes or No) or null,
-    "willing_to_undergo_drug_tests": string(Yes or No) or null,
-    "willing_to_undergo_background_checks": string(Yes or No) or null
+    "remote_work": "Yes", "No" or null,
+    "in_person_work": "Yes", "No" or null,
+    "open_to_relocation": "Yes", "No" or null,
+    "willing_to_complete_assessments": "Yes", "No" or null,
+    "willing_to_undergo_drug_tests": "Yes", "No" or null,
+    "willing_to_undergo_background_checks": "Yes", "No" or null
 }
 }
 

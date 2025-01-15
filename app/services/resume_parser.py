@@ -141,38 +141,23 @@ class ResumeParser:
     
     async def _combine_ocr_results(self, external_ocr: str, llm_response: str, links: str) -> str:
         """
-        Calls the LLM again to combine the external OCR results with
-        the LLM-based OCR results (JSON-like) into a single cohesive JSON result.
+        Combine the results from the external OCR and extracted links into a single JSON resume.
         """
-        # combination_prompt = (
-        #     "You are given three OCR outputs from the same resume:\n\n"
-        #     "1) EXTERNAL OCR:\n"
-        #     f"{external_ocr}\n\n"
-        #     "2) LLM OCR (JSON-like):\n"
-        #     f"{llm_response}\n\n"
-        #     "3) LINKS OCR:\n\n"
-        #     f"{links}\n\n"
-        #     "Please combine them into a single well-structured JSON resume. "
-        #     "Use the external OCR text and the links OCR to fill in any missing details from the LLM OCR result, "
-        #     "and if there are conflicts, choose the most accurate information. "
-        #     "Don't include a separate section for links."
-        #     "Don't add any other section or field that is not part of the provided JSON structure."
-        #     "Provide only the json code for the resume, without any explanations or additional text and also without ```json ```."
-        # )
-        
         combination_prompt = f"""
-            You are given two OCR outputs from the same resume:
-            1. EXTERNAL OCR: {external_ocr}
-            2. LINKS OCR: {links}
+            You are provided with two OCR outputs from the same resume:
+            1. **EXTERNAL OCR**: {external_ocr}
+            2. **LINKS OCR**: {links}
 
             Instructions:
-            - Combine both OCR outputs into a single, well-structured JSON resume.
-            - Use the EXTERNAL OCR as the primary source of information, filling in missing or additional details from the LINKS OCR.
-            - For each field in the provided JSON schema, extract the most relevant, longest, and most detailed information available from both OCR outputs.
-            - In case of conflicting data between EXTERNAL OCR and LINKS OCR, choose the most accurate information based on context (e.g., dates, roles, or responsibilities).
-            - Ensure you do not invent any information. If a field is missing from both OCRs, leave it as null.
-            - For the projects section, add the productions presented in the work descriptions, with their links.
-            - You must strictly adhere to the following JSON schema structure, ensuring that no additional fields or explanations are added outside of the provided template.
+            - **Primary Source**: Use the EXTERNAL OCR as the primary source of information.
+            - **Supplementation**: Fill in any missing or additional details from the LINKS OCR, only when relevant and non-redundant.
+            - **Contextual Accuracy**: For conflicting information between the two sources (e.g., dates, roles, or responsibilities), choose the most contextually accurate information based on:
+                - Consistency with other data points within the OCR outputs.
+                - The logical flow of the resume (e.g., career progression, roles, and dates).
+            - **No Invention**: Do not create or infer any missing information. If a field is absent from both OCRs, leave it as null.
+            - **Fields**: For each field in the provided JSON schema, extract the most relevant, longest, and most detailed information available from both OCRs, prioritizing the accuracy of the data over brevity.
+            - **Projects**: In the "projects" section, incorporate information from both OCRs, ensuring to include the production titles and links, even if they appear only in the LINKS OCR. Include the link URLs as they correspond to the specific productions mentioned.
+            - **Clear Formatting**: Ensure the final JSON is well-structured, with all fields properly populated, respecting the provided schema format.
             
             {BASE_OCR_PROMPT}
         """
@@ -195,17 +180,8 @@ class ResumeParser:
             tmp_file_path = tmp_file.name
         
         try:
-            # Step 1 & 2: Run external OCR and LLM OCR in parallel
-            # external_ocr_task = analyze_read(tmp_file_path)
-            
-            # llm_response_task = loop.run_in_executor(
-            #     self._executor,
-            #     lambda: self._parse_pdf_file(tmp_file_path)
-            # )
-
-            # # external_ocr, llm_response = await asyncio.gather(
-            # #     external_ocr_task, llm_response_task
-            # # )
+            # Step 1: Run external OCR
+            # external_ocr = await asyncio.gather(analyze_read(tmp_file_path))
             
             # load from output json file
             with open('output.json', 'r') as f:
