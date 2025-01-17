@@ -39,9 +39,9 @@ async def analyze_read(file_path):
     # Convert the analysis result to JSON
     result_json = result.as_dict()
     content = result_json["content"]
-    # Save the string content to txt file:
-    output = "output.txt"
-    with open(output, "w") as output_file:
-        output_file.write(content)
-    return json.load(content)
-
+    
+    # Save the JSON to a local file
+    output_json_path = "output.json"
+    with open(output_json_path, "w") as output_file:
+        json.dump(content, output_file, indent=4)
+    return json.dumps(content)
