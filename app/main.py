@@ -25,7 +25,6 @@ async def lifespan(app: FastAPI):
     """Lifespan context manager per l'applicazione FastAPI."""
     app.state.executor = ThreadPoolExecutor(max_workers=10)
     resume_parser.set_executor(app.state.executor)
-
     yield
 
     app.state.executor.shutdown(wait=True)
