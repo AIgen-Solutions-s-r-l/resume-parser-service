@@ -1,5 +1,5 @@
 from typing import Dict, Any, Optional
-from app.schemas.resume import AddResume, UpdateResume
+from app.schemas.resume import ResumeBase
 from app.core.mongodb import collection_name
 from app.core.logging_config import LogConfig
 from pymongo import ReturnDocument
@@ -43,20 +43,21 @@ async def get_resume_by_user_id(user_id: int, version: Optional[str] = None) -> 
         })
         return {"error": f"Error retrieving resume: {str(e)}"}
 
-async def add_resume(resume: AddResume, current_user: int) -> Dict[str, Any]:
+async def add_resume(resume: ResumeBase, current_user: int) -> Dict[str, Any]:
     """
-    Add a new resume for the user. If an existing resume is found, delete it before inserting the new one.
-    Handles consistency manually since transactions are unavailable.
+    Add a new resume for the user. If an existing resume is found, delete it 
+    before inserting the new one. Handles consistency manually since 
+    transactions are unavailable.
 
     Args:
-        resume (AddResume): The resume data to insert.
+        resume (ResumeBase): The resume data to insert (without user_id).
         current_user (int): The ID of the current user.
 
     Returns:
         Dict[str, Any]: The inserted resume document or an error message.
     """
     try:
-        # Check for an existing resume
+        # Check for an existing resume for this user
         existing_resume = await collection_name.find_one({"user_id": current_user})
         if existing_resume:
             logger.warning(
@@ -65,20 +66,28 @@ async def add_resume(resume: AddResume, current_user: int) -> Dict[str, Any]:
             )
             delete_result = await collection_name.delete_one({"user_id": current_user})
             if delete_result.deleted_count == 0:
-                raise RuntimeError("Failed to delete existing resume during replacement.")
+                raise RuntimeError(
+                    "Failed to delete existing resume during replacement."
+                )
 
-        # Set user_id on the new resume
-        resume.user_id = current_user
+        # Convert the Pydantic model to a dictionary
+        resume_dict = resume.model_dump()
 
-        # Insert the new resume
-        result = await collection_name.insert_one(resume.model_dump())
+        # Manually add user_id to the dictionary
+        resume_dict["user_id"] = current_user
+
+        # Insert the new resume data
+        result = await collection_name.insert_one(resume_dict)
         if result.inserted_id:
             inserted_resume = await collection_name.find_one({"_id": result.inserted_id})
             if inserted_resume:
                 inserted_resume["_id"] = str(inserted_resume["_id"])
                 logger.info(
                     "Resume created successfully",
-                    extra={"event_type": "resume_created", "user_id": current_user},
+                    extra={
+                        "event_type": "resume_created",
+                        "user_id": current_user
+                    },
                 )
                 return inserted_resume
 
@@ -87,18 +96,18 @@ async def add_resume(resume: AddResume, current_user: int) -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(
-            "Error during add_resume operation",
+            "Unexpected error during resume creation",
             exc_info=True,
             extra={
-                "event_type": "resume_creation_error",
+                "event_type": "unexpected_error",
                 "user_id": current_user,
-                "error_type": type(e).__name__,
                 "error_details": str(e),
+                "resume_data": resume.model_dump(exclude_unset=True),
             },
         )
-        return {"error": f"Unexpected error: {str(e)}"}
+        return {"error": "UnexpectedError", "message": str(e)}
 
-async def update_resume(resume: UpdateResume, user_id: int) -> Dict[str, Any]:
+async def update_resume(resume: ResumeBase, user_id: int) -> Dict[str, Any]:
     try:
         existing_resume = await collection_name.find_one({"user_id": user_id})
         if not existing_resume:

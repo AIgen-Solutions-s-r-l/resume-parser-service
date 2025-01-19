@@ -6,7 +6,7 @@ from PyPDF2 import PdfReader, errors
 from app.core.auth import get_current_user
 from app.core.logging_config import LogConfig
 from app.core.exceptions import InvalidResumeDataError, ResumeNotFoundError
-from app.schemas.resume import AddResume, PdfJsonResume, UpdateResume
+from app.schemas.resume import ResumeBase
 from app.services.resume_service import (
     get_resume_by_user_id,
     add_resume,
@@ -77,8 +77,8 @@ def validate_file_size_and_format(file: UploadFile) -> bytes:
 
 @router.post(
     "/create_resume",
-    response_model=AddResume,
     status_code=status.HTTP_201_CREATED,
+    response_model=ResumeBase,
     responses={
         201: {"description": "Resume successfully created"},
         400: {"description": "Invalid resume data"},
@@ -86,16 +86,8 @@ def validate_file_size_and_format(file: UploadFile) -> bytes:
         500: {"description": "Internal server error"},
     },
 )
-async def create_resume(resume_data: AddResume, current_user=Depends(get_current_user)) -> Any:
+async def create_resume(resume_data: ResumeBase, current_user=Depends(get_current_user)) -> Any:
     """Create a new resume in the database."""
-    logger.info(
-        "Received request to create resume",
-        extra={
-            "event_type": "resume_creation_request",
-            "user_id": current_user,
-            "resume_data": resume_data.model_dump(exclude_unset=True) if hasattr(resume_data, "model_dump") else str(resume_data),
-        },
-    )
     try:
         logger.info(
             "Attempting to add resume to the database",
@@ -143,7 +135,7 @@ async def create_resume(resume_data: AddResume, current_user=Depends(get_current
 
 @router.get(
     "/get",
-    response_model=AddResume,
+    response_model=ResumeBase,
     responses={
         200: {"description": "Resume successfully retrieved"},
         401: {"description": "Not authenticated"},
@@ -179,7 +171,7 @@ async def get_resume(current_user=Depends(get_current_user)) -> Any:
 
 @router.put(
     "/update",
-    response_model=UpdateResume,
+    response_model=ResumeBase,
     responses={
         200: {"description": "Resume successfully updated"},
         400: {"description": "Invalid resume data"},
@@ -189,7 +181,7 @@ async def get_resume(current_user=Depends(get_current_user)) -> Any:
         500: {"description": "Internal server error"},
     },
 )
-async def update_user_resume(resume_data: UpdateResume, current_user=Depends(get_current_user)) -> UpdateResume:
+async def update_user_resume(resume_data: ResumeBase, current_user=Depends(get_current_user)) -> ResumeBase:
     """Update an existing resume."""
     try:
         result = await update_resume(resume_data, current_user)
@@ -228,7 +220,7 @@ async def update_user_resume(resume_data: UpdateResume, current_user=Depends(get
         500: {"description": "Internal server error"},
     },
 )
-async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get_current_user)) -> PdfJsonResume:
+async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get_current_user)) -> ResumeBase:
     """Convert a PDF resume to JSON."""
     try:
         pdf_bytes = validate_file_size_and_format(pdf_file)
@@ -256,7 +248,7 @@ async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get
                     "Resume JSON generated successfully",
                     extra={"event_type": "resume_json_generated", "user_id": current_user},
                 )
-                return PdfJsonResume.model_validate_json(resume_json_str)
+                return ResumeBase.model_validate_json(resume_json_str)
             except Exception as validation_error:
                 if attempt == 1:
                     logger.error(

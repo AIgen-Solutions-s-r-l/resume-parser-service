@@ -126,7 +126,7 @@ class LegalAuthorization(BaseModel):
 
 
 class ResumeBase(BaseModel):
-    vector: Optional[List[float]] = None
+    personal_information: Optional[PersonalInformation] = None
     education_details: Optional[List[EducationDetails]] = None
     experience_details: Optional[List[ExperienceDetails]] = None
     projects: Optional[List[Project]] = None
@@ -139,11 +139,11 @@ class ResumeBase(BaseModel):
     work_preferences: Optional[WorkPreferences] = None
     availability: Optional[Availability] = None
     salary_expectations: Optional[SalaryExpectations] = None
+    vector: Optional[List[float]] = None
     
     def to_text(self) -> str:
         text_parts = []
-
-        # Handle personal information if available (for AddResume and PdfJsonResume)
+        
         if hasattr(self, 'personal_information') and self.personal_information:
             pi = self.personal_information
             pi_parts = []
@@ -298,16 +298,3 @@ class ResumeBase(BaseModel):
         embeddings = text_embedder.get_embeddings(self.to_text())
         self.vector = embeddings[0] if embeddings else None
         return super().model_dump(exclude_unset=exclude_unset)
-
-
-class AddResume(ResumeBase):
-    user_id: Optional[int]
-    personal_information: Optional[PersonalInformation]
-
-
-class UpdateResume(ResumeBase):
-    personal_information: Optional[PersonalInformation] = None
-
-
-class PdfJsonResume(ResumeBase):
-    personal_information: Optional[PersonalInformation] = None
