@@ -201,3 +201,30 @@ async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> str:
     with open("resume.json", "w") as f:
         f.write(resume_data)
     return resume_data
+
+async def user_has_resume(user_id: int) -> bool:
+    """
+    Check if the user with the given user_id has a resume in the database.
+
+    Args:
+        user_id (int): The ID of the user.
+
+    Returns:
+        bool: True if a resume exists for the user, False otherwise.
+    """
+    try:
+        # Query the collection to see if any document exists for this user_id
+        resume = await collection_name.find_one({"user_id": user_id}, projection={"_id": 1})
+        return resume is not None
+    except Exception as e:
+        logger.error(
+            f"Unexpected error while checking resume existence for user {user_id}: {str(e)}",
+            extra={
+                "event_type": "resume_existence_check_error",
+                "user_id": user_id,
+                "error_type": type(e).__name__,
+                "error_details": str(e),
+            },
+        )
+        # Returning False here, but you can also choose to re-raise or handle differently
+        return False

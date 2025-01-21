@@ -282,6 +282,19 @@ Note: In this case, since exam is a nested object and is empty, we exclude it fr
       }
       ```
 
+#### 5. `GET /resumes/exists`
+- **Description:** Retrieves the authenticated user's resume.
+- **Request Example:**
+  ```bash
+  curl -X GET "http://localhost:8004/resumes/exists"   -H "accept: application/json"   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+  ```
+- **Response Example:**
+  ```bash
+{
+  "exists": true
+}
+  ```
+  
 - **Notes:**
   - This endpoint requires an authentication token to verify the current user.
   - The uploaded PDF file should be passed as a `multipart/form-data` field named `pdf_file`.

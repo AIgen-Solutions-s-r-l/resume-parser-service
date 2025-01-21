@@ -275,3 +275,45 @@ async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred while processing the PDF.",
         )
+    
+@router.get(
+    "/exists",
+    responses={
+        200: {"description": "Whether or not a user's resume exists."},
+        401: {"description": "Not authenticated"},
+        500: {"description": "Internal server error"},
+    },
+)
+async def check_resume_exists(current_user=Depends(get_current_user)) -> Any:
+    """
+    Check if the authenticated user has a resume.
+    
+    Returns:
+        Dict[str, bool]: A simple JSON response containing the field "exists" 
+                         which indicates if the user's resume is present.
+    """
+    try:
+        logger.info(
+            "Checking if user has a resume",
+            extra={"event_type": "check_resume_exists", "user_id": current_user},
+        )
+        
+        from app.services.resume_service import user_has_resume  # Ensure the import is correct and avoid circular imports
+        exists = await user_has_resume(current_user)
+
+        return {"exists": exists}
+
+    except Exception as e:
+        logger.error(
+            "Unexpected error during resume existence check",
+            exc_info=True,
+            extra={
+                "event_type": "unexpected_error",
+                "user_id": current_user,
+                "error_details": str(e),
+            },
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred while checking if the resume exists.",
+        )
