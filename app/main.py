@@ -4,15 +4,12 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.core.config import Settings
+from app.core.config import settings
 from app.core.logging_config import init_logging, test_connection
 from app.routers.resume_ingestor_router import router as resume_router
 from app.services.resume_service import resume_parser
 
 from concurrent.futures import ThreadPoolExecutor
-
-# Inizializza le impostazioni
-settings = Settings()
 
 # Testa la connessione prima
 test_connection(settings.syslog_host, settings.syslog_port)
