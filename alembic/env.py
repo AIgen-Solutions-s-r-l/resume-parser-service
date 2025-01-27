@@ -5,7 +5,7 @@ from sqlalchemy import pool
 
 from alembic import context
 from app.core.base import Base
-from app.core.config import Settings
+from app.core.config import settings
 
 # this is the Alembic Config object
 config = context.config
@@ -19,7 +19,6 @@ target_metadata = Base.metadata
 
 
 def get_url():
-    settings = Settings()
     # Converti l'URL da asyncpg a psycopg2
     return settings.database_url.replace("postgresql+asyncpg://", "postgresql://")
 

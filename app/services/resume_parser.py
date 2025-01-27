@@ -17,6 +17,7 @@ from app.services.prompt import (
     SINGLE_CALL_PROMPT,
 )
 from app.services.read_azure import analyze_read
+from app.core.config import settings
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ class ResumeParser:
         :param model_name: Name of the model with vision + text capabilities.
         :param openai_api_key: Your OpenAI API key.
         """
-        self.openai_api_key = openai_api_key or os.getenv("OPENAI_API_KEY")
+        self.openai_api_key = openai_api_key or settings.openai_api_key
         if not self.openai_api_key:
             raise ValueError("OpenAI API key not provided.")
 

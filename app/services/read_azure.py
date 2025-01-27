@@ -1,5 +1,6 @@
 import os
 import json
+from app.core.config import settings
 
 async def analyze_read(file_path):
     from azure.core.credentials import AzureKeyCredential
@@ -8,8 +9,8 @@ async def analyze_read(file_path):
     from dotenv import load_dotenv
     load_dotenv()
 
-    endpoint = os.getenv("DOCUMENTINTELLIGENCE_ENDPOINT")
-    key = os.getenv("DOCUMENTINTELLIGENCE_API_KEY")
+    endpoint = os.getenv("DOCUMENTINTELLIGENCE_ENDPOINT") or settings.document_intelligence_endpoint
+    key = os.getenv("DOCUMENTINTELLIGENCE_API_KEY") or settings.document_intelligence_api_key
 
     document_intelligence_client = DocumentIntelligenceClient(endpoint=endpoint, credential=AzureKeyCredential(key))
 
