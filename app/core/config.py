@@ -20,15 +20,13 @@ class Settings(BaseSettings):
     log_retention: str = os.getenv("LOG_RETENTION", "7 days")
 
     # MongoDB settings
+    mongodb: str = os.getenv("MONGODB", "mongodb://localhost:27017")
     mongodb_host: str = os.getenv("MONGODB_HOST", "localhost")
     mongodb_port: int = int(os.getenv("MONGODB_PORT", "27017"))
     mongodb_username: str = os.getenv("MONGODB_USERNAME", "appUser")
     mongodb_password: str = os.getenv("MONGODB_PASSWORD", "password123")
     mongodb_database: str = os.getenv("MONGODB_DATABASE", "resumes")
     mongodb_auth_source: str = os.getenv("MONGODB_AUTH_SOURCE", "main_db")
-
-    # Redis settings
-    redis_port: int = int(os.getenv("REDIS_PORT", "6379"))
 
     # RabbitMQ settings
     rabbitmq_url: str = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")

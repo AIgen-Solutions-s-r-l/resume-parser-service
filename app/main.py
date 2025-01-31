@@ -104,3 +104,6 @@ async def test_log():
         }
     )
     return {"status": "Log sent"}
+
+from app.routers.healthcheck_router import router as healthcheck_router
+app.include_router(healthcheck_router)
