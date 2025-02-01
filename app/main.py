@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
 # Inizializza l'app FastAPI
 app = FastAPI(
     title="Resume Ingestor API",
-    description="Service per l'ingestione dei resume",
+    description="Service for resume ingestion and parsing",
     version="1.0.0",
     lifespan=lifespan
 )
