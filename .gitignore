@@ -52,3 +52,6 @@ htmlcov/
 cv_output/
 output/
 temp/
+
+.venv
+venv
