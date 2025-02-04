@@ -1,9 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from app.routers.healthchecks.fastapi_healthcheck import HealthCheckFactory, healthCheckRoute
 from app.routers.healthchecks.fastapi_healthcheck_mongodb import HealthCheckMongoDB
-from app.routers.healthchecks.fastapi_healthcheck_rabbitmq import HealthCheckRabbitMQ
 from app.core.config import Settings
-from fastapi import HTTPException
 
 router = APIRouter(tags=["healthcheck"])
 settings = Settings()
@@ -24,13 +22,6 @@ async def health_check():
             connection_uri=settings.mongodb,
             alias='mongo db',
             tags=('mongo', 'db')
-        )
-    )
-    _healthChecks.add(
-        HealthCheckRabbitMQ(
-            connection_uri=settings.rabbitmq_url,
-            alias='rabbit mq',
-            tags=('rabbit', 'mq')
         )
     )
     

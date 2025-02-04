@@ -105,10 +105,6 @@ VALID_RESUME_DATA = {
     }
 }
 
-# Test settings
-TEST_DATABASE_URL = "postgresql+asyncpg://testuser:testpassword@localhost:5432/main_db"
-
-
 # Fixtures
 @pytest.fixture(scope="session")
 def event_loop():
@@ -117,55 +113,6 @@ def event_loop():
     asyncio.set_event_loop(loop)
     yield loop
     loop.close()
-
-
-@pytest.fixture(scope="session")
-async def test_engine():
-    """Create test database engine."""
-    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-    yield engine
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-    await engine.dispose()
-
-
-@pytest.fixture(scope="function")
-async def test_db_session(test_engine):
-    """Provide test database session."""
-    TestingSessionLocal = sessionmaker(
-        test_engine,
-        class_=AsyncSession,
-        expire_on_commit=False,
-        autoflush=False
-    )
-
-    async with TestingSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.rollback()
-            await session.close()
-
-
-@pytest.fixture(scope="function")
-async def client(test_db_session):
-    """Create test client with overridden database session."""
-    app.dependency_overrides.clear()
-    app.dependency_overrides[get_db] = lambda: test_db_session
-
-    # Use explicit ASGITransport
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test"
-    ) as ac:
-        yield ac
-
-    app.dependency_overrides.clear()
 
 
 @pytest.fixture(scope="function")
@@ -178,52 +125,6 @@ def mongo_mock():
         mock.find_one_and_update = AsyncMock()
         mock.delete_one = AsyncMock()
         yield mock
-
-
-@pytest.fixture(scope="function")
-async def test_user(test_db_session):
-    """Create and provide a test user."""
-    from app.core.security import get_password_hash
-
-    test_user = User(
-        username="testuser",
-        email="test@example.com",
-        hashed_password=get_password_hash("testpassword123"),
-        is_admin=False
-    )
-
-    test_db_session.add(test_user)
-    await test_db_session.commit()
-    await test_db_session.refresh(test_user)
-
-    try:
-        yield test_user
-    finally:
-        await test_db_session.delete(test_user)
-        await test_db_session.commit()
-
-
-@pytest.fixture(scope="function")
-async def test_admin_user(test_db_session):
-    """Create and provide a test admin user."""
-    from app.core.security import get_password_hash
-
-    admin_user = User(
-        username="adminuser",
-        email="admin@example.com",
-        hashed_password=get_password_hash("adminpass123"),
-        is_admin=True
-    )
-
-    test_db_session.add(admin_user)
-    await test_db_session.commit()
-    await test_db_session.refresh(admin_user)
-
-    try:
-        yield admin_user
-    finally:
-        await test_db_session.delete(admin_user)
-        await test_db_session.commit()
 
 
 @pytest.fixture(scope="function")

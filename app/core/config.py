@@ -19,10 +19,6 @@ class Settings(BaseSettings):
     json_logs: bool = os.getenv("JSON_LOGS", "True").lower() == "true"
     log_retention: str = os.getenv("LOG_RETENTION", "7 days")
     
-    # Database settings
-    database_url: str = os.getenv("DATABASE_URL", "postgresql+asyncpg://testuser:testpassword@172.17.0.1:5432/main_db")
-    test_database_url: str = os.getenv("TEST_DATABASE_URL", "postgresql+asyncpg://testuser:testpassword@172.17.0.1:5432/test_db")
-
     # MongoDB settings
     mongodb: str = os.getenv("MONGODB", "mongodb://localhost:27017")
     mongodb_host: str = os.getenv("MONGODB_HOST", "localhost")

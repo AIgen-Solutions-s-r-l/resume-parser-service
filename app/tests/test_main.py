@@ -10,18 +10,7 @@ from httpx import AsyncClient
 from app.core.exceptions import AuthException, UserAlreadyExistsError
 from app.main import app
 
-from unittest.mock import patch, AsyncMock
-
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-
 from app.core.auth import get_current_user
-from app.core.database import get_db
-from app.models.user import User, Base
-
-TEST_DATABASE_URL = "postgresql+asyncpg://testuser:testpassword@localhost:5432/test_db"
-
 
 # Fixture per il client di test
 @pytest.fixture
@@ -35,77 +24,6 @@ async def async_client() -> Generator:
         yield client
         
 
-@pytest.fixture(scope="session")
-async def test_engine():
-    """Create test database engine."""
-    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-
-    yield engine
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-    await engine.dispose()
-
-
-@pytest.fixture(scope="function")
-async def test_db_session(test_engine):
-    """Provide test database session."""
-    TestingSessionLocal = sessionmaker(
-        test_engine,
-        class_=AsyncSession,
-        expire_on_commit=False,
-        autoflush=False
-    )
-
-    async with TestingSessionLocal() as session:
-        try:
-            yield session
-        finally:
-            await session.rollback()
-            await session.close()
-
-
-@pytest.fixture(scope="function")
-async def client(test_db_session):
-    """Create test client with overridden database session."""
-    app.dependency_overrides.clear()
-    app.dependency_overrides[get_db] = lambda: test_db_session
-
-    # Use explicit ASGITransport
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test"
-    ) as ac:
-        yield ac
-
-    app.dependency_overrides.clear()
-
-@pytest.fixture(scope="function")
-async def test_user(test_db_session):
-    """Create and provide a test user."""
-    from app.core.security import get_password_hash
-
-    test_user = User(
-        username="testuser",
-        email="test@example.com",
-        hashed_password=get_password_hash("testpassword123"),
-        is_admin=False
-    )
-
-    test_db_session.add(test_user)
-    await test_db_session.commit()
-    await test_db_session.refresh(test_user)
-
-    try:
-        yield test_user
-    finally:
-        await test_db_session.delete(test_user)
-        await test_db_session.commit()
-        
-@pytest.fixture(scope="function")
 async def auth_client(client, test_user):
     """Create authenticated test client."""
     from app.core.security import create_access_token
