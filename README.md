@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Resume Service** is a FastAPI-based microservice designed to handle resume ingestion, parsing, and management. It leverages MongoDB for data persistence, RabbitMQ for message queuing, and integrates with Azure services for enhanced text processing capabilities. The service includes robust authentication, text embedding functionality, and comprehensive health monitoring.
+**Resume Service** is a FastAPI-based microservice designed to handle resume ingestion, parsing, and management. It leverages MongoDB for data persistence and integrates with Azure services for enhanced text processing capabilities. The service includes robust authentication, text embedding functionality, and comprehensive health monitoring.
 
 ### Main Features
 
@@ -12,7 +12,6 @@
 - Secure User Authentication
 - Health Monitoring System
 - Azure Services Integration
-- RabbitMQ Message Queue Integration
 
 ## Project Architecture
 
@@ -20,7 +19,6 @@
 
 - **FastAPI Application**: Main web framework handling HTTP requests
 - **MongoDB**: Primary database for resume storage
-- **RabbitMQ**: Message queue for asynchronous processing
 - **Text Embedder**: Service for generating text embeddings
 - **Azure Integration**: Services for enhanced text processing
 - **Health Monitoring**: Comprehensive system health checks
@@ -46,7 +44,6 @@ resume_service/
 
 - Python 3.12.3
 - MongoDB 6.0+
-- RabbitMQ 3.12+
 - pip (latest version)
 - Docker (optional, for containerization)
 - Tesseract OCR:
@@ -69,12 +66,6 @@ ENVIRONMENT=development
 # MongoDB Configuration
 MONGODB_URL=mongodb://localhost:27017
 MONGODB_DB_NAME=resume_service
-
-# RabbitMQ Configuration
-RABBITMQ_HOST=localhost
-RABBITMQ_PORT=5672
-RABBITMQ_USER=guest
-RABBITMQ_PASSWORD=guest
 
 # Azure Configuration
 AZURE_ENDPOINT=your_azure_endpoint
@@ -161,17 +152,12 @@ Logs are configured in `app/core/logging_config.py`. The service uses structured
    - Check connection string in `.env`
    - Ensure network connectivity
 
-2. **RabbitMQ Connection Issues**
-   - Verify RabbitMQ is running: `systemctl status rabbitmq-server`
-   - Check RabbitMQ credentials in `.env`
-   - Ensure required queues are created
-
-3. **PDF Processing Errors**
+2. **PDF Processing Errors**
    - Verify Tesseract OCR installation
    - Check PDF file permissions
    - Ensure sufficient system memory
 
-4. **Authentication Issues**
+3. **Authentication Issues**
    - Verify JWT secret key configuration
    - Check token expiration settings
    - Ensure proper token format in requests
@@ -197,6 +183,6 @@ Logs are configured in `app/core/logging_config.py`. The service uses structured
 
 ---
 
-**Note:** Ensure all required services (MongoDB, RabbitMQ) are running before starting the application.
+**Note:** Ensure MongoDB is running before starting the application.
 
 For more detailed information about the resume microservice and additional endpoints, please refer to the API documentation.

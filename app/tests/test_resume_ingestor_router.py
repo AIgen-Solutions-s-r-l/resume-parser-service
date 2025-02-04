@@ -5,13 +5,10 @@ from unittest.mock import patch, AsyncMock
 
 import pytest
 from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
 
 from app.core.auth import get_current_user
-from app.core.database import get_db
 from app.main import app
-from app.models.user import User, Base
+from app.models.user import User
 
 # Test data
 VALID_RESUME_DATA = {
@@ -371,7 +368,7 @@ async def test_update_resume_success(auth_client, mongo_mock, test_user):
             "remote_work": VALID_RESUME_DATA["work_preferences"]["remote_work"] == "Yes",
             # ... (same boolean conversions as above)
             "willing_to_undergo_background_checks": VALID_RESUME_DATA["work_preferences"][
-                                                        "willing_to_undergo_background_checks"] == "Yes"
+                                                     "willing_to_undergo_background_checks"] == "Yes"
         },
         "user_id": test_user.id
     }

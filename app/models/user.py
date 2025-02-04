@@ -1,45 +1,59 @@
-"""SQLAlchemy models for user-related database tables including User and PasswordResetToken."""
+"""Pydantic models for user-related data including User and PasswordResetToken."""
 
-# app/models/user.py
 from datetime import datetime
+from typing import Optional
+from pydantic import BaseModel, EmailStr, Field
 
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
-
-from app.core.base import Base
-
-class User(Base):
+class User(BaseModel):
     """
-    SQLAlchemy model representing a user in the database.
+    Pydantic model representing a user.
 
     Attributes:
-        id (int): The primary key for the user.
+        id (str): The MongoDB ObjectId for the user.
         username (str): Unique username for the user.
         email (str): Unique email for the user.
         hashed_password (str): Hashed password for the user.
         is_admin (bool): Flag indicating if user has admin privileges.
     """
-    __tablename__ = "users"
+    id: Optional[str] = Field(None, alias="_id")
+    username: str
+    email: EmailStr
+    hashed_password: str
+    is_admin: bool = False
 
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(50), unique=True, index=True, nullable=False)
-    email = Column(String(100), unique=True, index=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    is_admin = Column(Boolean, default=False, nullable=False)
+    class Config:
+        populate_by_name = True
+        json_schema_extra = {
+            "example": {
+                "username": "johndoe",
+                "email": "john@example.com",
+                "hashed_password": "hashedpassword123",
+                "is_admin": False
+            }
+        }
 
 
-class PasswordResetToken(Base):
+class PasswordResetToken(BaseModel):
     """
-    SQLAlchemy model representing a password reset token.
+    Pydantic model representing a password reset token.
     
     Attributes:
         token (str): The unique token string used for password reset.
-        user_id (int): Foreign key reference to the user requesting reset.
+        user_id (str): Reference to the user requesting reset.
         expires_at (datetime): Timestamp when the token expires.
         used (bool): Flag indicating if token has been used.
     """
-    __tablename__ = "password_reset_tokens"
+    token: str
+    user_id: str
+    expires_at: datetime
+    used: bool = False
 
-    token = Column(String(255), primary_key=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    expires_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    used = Column(Boolean, default=False, nullable=False)
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "token": "reset-token-123",
+                "user_id": "user-id-123",
+                "expires_at": "2024-02-04T12:00:00Z",
+                "used": False
+            }
+        }
