@@ -16,7 +16,7 @@ try:
     )
 
     # Parse database name from connection string, default to 'resumes' if not specified
-    database_name = settings.mongodb.split('/')[-1].split('?')[0] or 'resumes'
+    database_name = settings.mongodb_database
     database = client[database_name]
     collection_name = database.get_collection("resumes")
 
