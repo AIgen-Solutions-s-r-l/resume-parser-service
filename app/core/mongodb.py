@@ -23,7 +23,8 @@ try:
     client.admin.command('ping')
     logger.info("MongoDB connection established", extra={
         "event_type": "mongodb_connected",
-        "mongodb_uri": settings.mongodb
+        "mongodb_uri": settings.mongodb,
+        "database": settings.mongodb_database
     })
 
 except Exception as e:

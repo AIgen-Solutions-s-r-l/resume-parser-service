@@ -21,12 +21,7 @@ class Settings(BaseSettings):
     
     # MongoDB settings
     mongodb: str = os.getenv("MONGODB", "mongodb://localhost:27017")
-
-    # RabbitMQ settings
-    rabbitmq_url: str = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
-    career_docs_queue: str = os.getenv("CAREER_DOCS_QUEUE", "career_docs_queue")
-    career_docs_response_queue: str = os.getenv("CAREER_DOCS_RESPONSE_QUEUE", "career_docs_response_queue")
-    application_manager_queue: str = os.getenv("APPLICATION_MANAGER_QUEUE", "middleware_notification_queue")
+    mongodb_database: str = os.getenv("MONGODB_DATABASE", "resumes")
 
     # Authentication settings
     secret_key: str = os.getenv("SECRET_KEY", "your-secret-key-here")
