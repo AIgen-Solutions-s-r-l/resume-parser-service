@@ -7,23 +7,23 @@ logger = LogConfig.get_logger()
 try:
     logger.info("Initializing MongoDB connection", extra={
         "event_type": "mongodb_init",
-        "mongodb_host": settings.mongodb_host,
-        "mongodb_database": settings.mongodb_database
+        "mongodb_uri": settings.mongodb
     })
 
     client = AsyncIOMotorClient(
-        settings.mongodb_uri,
+        settings.mongodb,
         serverSelectionTimeoutMS=5000
     )
 
-    database = client[settings.mongodb_database]
+    # Parse database name from connection string, default to 'resumes' if not specified
+    database_name = settings.mongodb.split('/')[-1].split('?')[0] or 'resumes'
+    database = client[database_name]
     collection_name = database.get_collection("resumes")
 
     client.admin.command('ping')
     logger.info("MongoDB connection established", extra={
         "event_type": "mongodb_connected",
-        "host": settings.mongodb_host,
-        "database": settings.mongodb_database
+        "mongodb_uri": settings.mongodb
     })
 
 except Exception as e:

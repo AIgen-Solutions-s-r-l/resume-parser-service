@@ -21,12 +21,6 @@ class Settings(BaseSettings):
     
     # MongoDB settings
     mongodb: str = os.getenv("MONGODB", "mongodb://localhost:27017")
-    mongodb_host: str = os.getenv("MONGODB_HOST", "localhost")
-    mongodb_port: int = int(os.getenv("MONGODB_PORT", "27017"))
-    mongodb_username: str = os.getenv("MONGODB_USERNAME", "appUser")
-    mongodb_password: str = os.getenv("MONGODB_PASSWORD", "password123")
-    mongodb_database: str = os.getenv("MONGODB_DATABASE", "resumes")
-    mongodb_auth_source: str = os.getenv("MONGODB_AUTH_SOURCE", "main_db")
 
     # RabbitMQ settings
     rabbitmq_url: str = os.getenv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
@@ -42,11 +36,6 @@ class Settings(BaseSettings):
     openai_api_key: str = os.getenv("OPENAI_API_KEY", "your-openai-api-key-here")
     document_intelligence_api_key: str = os.getenv("DOCUMENT_INTELLIGENCE_API_KEY", "your-document-intelligence-api-key-here")
     document_intelligence_endpoint: str = os.getenv("DOCUMENT_INTELLIGENCE_ENDPOINT", "your-document-intelligence-endpoint-here")
-
-    # Construct MongoDB URI with auth source
-    @property
-    def mongodb_uri(self) -> str:
-        return f"mongodb://{self.mongodb_username}:{self.mongodb_password}@{self.mongodb_host}:{self.mongodb_port}/{self.mongodb_database}?authSource={self.mongodb_auth_source}"
 
     # Environment-specific logging configuration
     @property
