@@ -7,9 +7,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
+from app.core.cache import get_cache
 from app.core.config import settings
 from app.core.dependencies import DatabaseManager
+from app.core.indexes import ensure_indexes
 from app.core.logging_config import init_logging, test_connection
 from app.core.middleware import RequestLoggingMiddleware, setup_exception_handlers
 from app.routers.healthcheck_router import router as healthcheck_router
@@ -33,7 +36,7 @@ async def lifespan(app: FastAPI):
     Application lifespan manager.
 
     Handles startup and shutdown events:
-    - Startup: Initialize database connection and thread pool
+    - Startup: Initialize database connection, indexes, cache, and thread pool
     - Shutdown: Close connections and cleanup resources
     """
     # Startup
@@ -55,6 +58,13 @@ async def lifespan(app: FastAPI):
     try:
         await db_manager.connect()
         app.state.db_manager = db_manager
+
+        # Create database indexes for query optimization
+        index_results = await ensure_indexes(db_manager.database)
+        logger.info(
+            "Database indexes initialized",
+            extra={"event_type": "indexes_initialized", "results": index_results},
+        )
     except ConnectionError as e:
         logger.error(
             "Failed to connect to database during startup",
@@ -63,10 +73,18 @@ async def lifespan(app: FastAPI):
         # Re-raise to prevent app from starting without database
         raise
 
+    # Initialize cache
+    cache = get_cache()
+    await cache.start()
+    app.state.cache = cache
+
     yield
 
     # Shutdown
     logger.info("Shutting down application", extra={"event_type": "service_shutdown"})
+
+    # Stop cache cleanup task
+    await cache.stop()
 
     # Close database connection
     await db_manager.disconnect()
@@ -93,6 +111,9 @@ app.add_middleware(
     expose_headers=["*"],
     max_age=600,
 )
+
+# Add GZip compression for responses > 500 bytes
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 # Add request logging middleware
 app.add_middleware(RequestLoggingMiddleware)

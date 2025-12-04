@@ -2,9 +2,12 @@
 """
 Health check endpoint router.
 """
+from typing import Any, Dict
+
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 
+from app.core.cache import get_cache
 from app.core.healthcheck import (
     HealthCheckResponse,
     HealthCheckRunner,
@@ -117,3 +120,20 @@ async def liveness() -> JSONResponse:
         status_code=status.HTTP_200_OK,
         content={"status": "alive"},
     )
+
+
+@router.get(
+    "/metrics/cache",
+    responses={
+        200: {"description": "Cache statistics"},
+    },
+)
+async def cache_metrics() -> Dict[str, Any]:
+    """
+    Get cache performance metrics.
+
+    Returns:
+        Cache statistics including hits, misses, size, and hit ratio.
+    """
+    cache = get_cache()
+    return cache.get_stats()

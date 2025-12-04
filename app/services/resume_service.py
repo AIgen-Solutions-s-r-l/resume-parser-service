@@ -3,23 +3,28 @@ from typing import Dict, Any, Optional
 from pymongo import ReturnDocument
 from pymongo.errors import PyMongoError, ConnectionFailure, OperationFailure
 
-from app.schemas.resume import ResumeBase
-from app.core.mongodb import collection_name
-from app.core.logging_config import LogConfig
+from app.core.cache import cache_key, get_cache
 from app.core.exceptions import (
     ResumeNotFoundError,
     DatabaseOperationError,
 )
+from app.core.logging_config import LogConfig
+from app.core.mongodb import collection_name
+from app.schemas.resume import ResumeBase
 from app.services.resume_parser import ResumeParser
 
 logger = LogConfig.get_logger()
 
 resume_parser = ResumeParser()
 
+# Cache TTL constants (in seconds)
+RESUME_CACHE_TTL = 300  # 5 minutes
+RESUME_EXISTS_CACHE_TTL = 60  # 1 minute
+
 
 async def get_resume_by_user_id(user_id: int, version: Optional[str] = None) -> Dict[str, Any]:
     """
-    Retrieve a resume by user ID.
+    Retrieve a resume by user ID with caching.
 
     Args:
         user_id: The user's ID
@@ -32,6 +37,19 @@ async def get_resume_by_user_id(user_id: int, version: Optional[str] = None) -> 
         ResumeNotFoundError: If resume doesn't exist
         DatabaseOperationError: If database operation fails
     """
+    # Generate cache key
+    key = cache_key(user_id, version or "", prefix="resume")
+    cache = get_cache()
+
+    # Try cache first
+    cached_resume = await cache.get(key)
+    if cached_resume is not None:
+        logger.debug(
+            "Resume retrieved from cache",
+            extra={"event_type": "cache_hit", "user_id": user_id},
+        )
+        return cached_resume
+
     query = {"user_id": user_id}
     if version:
         query["version"] = version
@@ -71,6 +89,10 @@ async def get_resume_by_user_id(user_id: int, version: Optional[str] = None) -> 
         return {"error": f"Resume not found for user ID: {user_id}"}
 
     resume["_id"] = str(resume["_id"])
+
+    # Cache the result
+    await cache.set(key, resume, RESUME_CACHE_TTL)
+
     logger.info(
         "Resume retrieved",
         extra={
@@ -96,6 +118,8 @@ async def add_resume(resume: ResumeBase, current_user: int) -> Dict[str, Any]:
     Raises:
         DatabaseOperationError: If database operation fails
     """
+    cache = get_cache()
+
     try:
         # Check for an existing resume for this user
         existing_resume = await collection_name.find_one({"user_id": current_user})
@@ -120,6 +144,10 @@ async def add_resume(resume: ResumeBase, current_user: int) -> Dict[str, Any]:
             inserted_resume = await collection_name.find_one({"_id": result.inserted_id})
             if inserted_resume:
                 inserted_resume["_id"] = str(inserted_resume["_id"])
+
+                # Invalidate cache for this user
+                await cache.invalidate_pattern(cache_key(current_user, "", prefix="resume")[:16])
+
                 logger.info(
                     "Resume created successfully",
                     extra={"event_type": "resume_created", "user_id": current_user},
@@ -168,6 +196,8 @@ async def update_resume(resume: ResumeBase, user_id: int) -> Dict[str, Any]:
         ResumeNotFoundError: If resume doesn't exist
         DatabaseOperationError: If database operation fails
     """
+    cache = get_cache()
+
     try:
         existing_resume = await collection_name.find_one({"user_id": user_id})
     except (ConnectionFailure, OperationFailure) as e:
@@ -214,6 +244,10 @@ async def update_resume(resume: ResumeBase, user_id: int) -> Dict[str, Any]:
 
     if updated_resume:
         updated_resume["_id"] = str(updated_resume["_id"])
+
+        # Invalidate cache for this user
+        await cache.invalidate_pattern(cache_key(user_id, "", prefix="resume")[:16])
+
         logger.info(
             "Resume updated",
             extra={"event_type": "resume_updated", "user_id": user_id},
@@ -240,6 +274,8 @@ async def delete_resume(user_id: int) -> Dict[str, Any]:
     Raises:
         DatabaseOperationError: If database operation fails
     """
+    cache = get_cache()
+
     try:
         existing_resume = await collection_name.find_one({"user_id": user_id})
         if not existing_resume:
@@ -251,6 +287,9 @@ async def delete_resume(user_id: int) -> Dict[str, Any]:
 
         result = await collection_name.delete_one({"user_id": user_id})
         if result.deleted_count > 0:
+            # Invalidate cache for this user
+            await cache.invalidate_pattern(cache_key(user_id, "", prefix="resume")[:16])
+
             logger.info(
                 "Resume deleted",
                 extra={"event_type": "resume_deleted", "user_id": user_id},
@@ -286,7 +325,7 @@ async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> str:
 
 async def user_has_resume(user_id: int) -> bool:
     """
-    Check if the user has a resume in the database.
+    Check if the user has a resume in the database with caching.
 
     Args:
         user_id: The ID of the user.
@@ -297,11 +336,25 @@ async def user_has_resume(user_id: int) -> bool:
     Raises:
         DatabaseOperationError: If database operation fails
     """
+    # Generate cache key for exists check
+    key = cache_key(user_id, prefix="resume_exists")
+    cache = get_cache()
+
+    # Try cache first
+    cached_result = await cache.get(key)
+    if cached_result is not None:
+        return cached_result
+
     try:
         resume = await collection_name.find_one(
             {"user_id": user_id}, projection={"_id": 1}
         )
-        return resume is not None
+        exists = resume is not None
+
+        # Cache the result with shorter TTL
+        await cache.set(key, exists, RESUME_EXISTS_CACHE_TTL)
+
+        return exists
     except (ConnectionFailure, OperationFailure) as e:
         logger.error(
             "Database error while checking resume existence",
