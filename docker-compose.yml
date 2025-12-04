@@ -1,0 +1,97 @@
+# docker-compose.yml
+# Local development environment
+
+services:
+  # =============================================================================
+  # Resume Parser Service
+  # =============================================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resume-parser-service
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB=mongodb://mongodb:27017
+      - MONGODB_DATABASE=resumes
+      - SECRET_KEY=${SECRET_KEY:-development-secret-key-change-in-production}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DOCUMENT_INTELLIGENCE_API_KEY=${DOCUMENT_INTELLIGENCE_API_KEY}
+      - DOCUMENT_INTELLIGENCE_ENDPOINT=${DOCUMENT_INTELLIGENCE_ENDPOINT}
+      - ENVIRONMENT=development
+      - LOG_LEVEL=DEBUG
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8080
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/live')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - resume-network
+
+  # =============================================================================
+  # MongoDB Database
+  # =============================================================================
+  mongodb:
+    image: mongo:7.0
+    container_name: resume-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=resumes
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - resume-network
+
+  # =============================================================================
+  # MongoDB Express (Database UI) - Optional
+  # =============================================================================
+  mongo-express:
+    image: mongo-express:1.0
+    container_name: resume-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    profiles:
+      - tools
+    restart: unless-stopped
+    networks:
+      - resume-network
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  resume-network:
+    driver: bridge
