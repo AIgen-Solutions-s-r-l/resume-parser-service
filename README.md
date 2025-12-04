@@ -1,188 +1,268 @@
-# Resume Service
+# Resume Parser Service
 
-## Overview
+A FastAPI microservice for resume ingestion, parsing, and management. Converts PDF resumes to structured JSON using Azure Document Intelligence and OpenAI GPT-4 Vision.
 
-**Resume Service** is a FastAPI-based microservice designed to handle resume ingestion, parsing, and management. It leverages MongoDB for data persistence and integrates with Azure services for enhanced text processing capabilities. The service includes robust authentication, text embedding functionality, and comprehensive health monitoring.
+## Features
 
-### Main Features
+- **PDF to JSON Conversion**: Parse PDF resumes into structured JSON format
+- **Dual OCR Strategy**: Azure Document Intelligence + OpenAI GPT-4o Vision
+- **Smart Combination**: LLM-powered merging of OCR results for accuracy
+- **Link Extraction**: Automatic extraction of URLs from PDF documents
+- **JWT Authentication**: Secure API access with token-based auth
+- **MongoDB Storage**: Persistent resume data storage
+- **Health Monitoring**: Kubernetes-ready health endpoints
 
-- PDF Resume Ingestion and Parsing
-- Structured JSON Resume Creation and Management
-- Text Embedding Generation
-- Secure User Authentication
-- Health Monitoring System
-- Azure Services Integration
+## Quick Start
 
-## Project Architecture
+### Using Docker Compose (Recommended)
 
-### Core Components
+```bash
+# Clone the repository
+git clone https://github.com/AIgen-Solutions-s-r-l/resume-parser-service.git
+cd resume-parser-service
 
-- **FastAPI Application**: Main web framework handling HTTP requests
-- **MongoDB**: Primary database for resume storage
-- **Text Embedder**: Service for generating text embeddings
-- **Azure Integration**: Services for enhanced text processing
-- **Health Monitoring**: Comprehensive system health checks
+# Copy environment file
+cp .env.example .env
+# Edit .env with your API keys
+
+# Start services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f app
+```
+
+The API will be available at `http://localhost:8000`.
+
+### Manual Installation
+
+```bash
+# Prerequisites: Python 3.12+, MongoDB 7.0+, Tesseract OCR
+
+# Install system dependencies (Ubuntu/Debian)
+sudo apt-get install tesseract-ocr tesseract-ocr-eng poppler-utils
+
+# Install Python dependencies
+pip install poetry
+poetry install
+
+# Run the service
+uvicorn app.main:app --reload
+```
+
+## API Endpoints
+
+### Resume Operations
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/resumes/pdf_to_json` | Convert PDF to JSON resume |
+| `POST` | `/resumes/create_resume` | Create a new resume |
+| `GET` | `/resumes/get` | Get current user's resume |
+| `PUT` | `/resumes/update` | Update existing resume |
+| `GET` | `/resumes/exists` | Check if user has a resume |
+
+### Health Checks
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/healthcheck` | Full health check with dependencies |
+| `GET` | `/health` | Alias for /healthcheck |
+| `GET` | `/ready` | Kubernetes readiness probe |
+| `GET` | `/live` | Kubernetes liveness probe |
+
+### Authentication
+
+All `/resumes/*` endpoints require JWT Bearer token authentication.
+
+```bash
+curl -X GET "http://localhost:8000/resumes/get" \
+  -H "Authorization: Bearer <your-jwt-token>"
+```
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         FastAPI Application                      │
+├─────────────────────────────────────────────────────────────────┤
+│  Routers          │  Services           │  Core                  │
+│  ├─ resume        │  ├─ resume_parser   │  ├─ config            │
+│  └─ healthcheck   │  └─ resume_service  │  ├─ auth              │
+│                   │                     │  ├─ dependencies      │
+│  Repositories     │  External Services  │  ├─ middleware        │
+│  └─ resume_repo   │  ├─ Azure Doc AI    │  └─ healthcheck       │
+│                   │  └─ OpenAI GPT-4o   │                        │
+├─────────────────────────────────────────────────────────────────┤
+│                         MongoDB                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ### Directory Structure
 
 ```
 resume_service/
 ├── app/
-│   ├── core/           # Core functionality and configurations
-│   ├── libs/           # Utility libraries
-│   ├── models/         # Data models
+│   ├── core/           # Configuration, auth, middleware, DI
+│   ├── repositories/   # Data access layer (Repository pattern)
 │   ├── routers/        # API endpoints
-│   ├── schemas/        # Pydantic schemas
+│   ├── schemas/        # Pydantic models
 │   ├── services/       # Business logic
 │   └── tests/          # Test suite
-└── cv_output/         # Output directory for processed resumes
+├── .github/workflows/  # CI/CD pipelines
+├── docker-compose.yml  # Local development setup
+└── Dockerfile          # Production container
 ```
 
-## Setup
+### PDF Processing Flow
 
-### Prerequisites
+```
+PDF Upload → Validate → Azure OCR ─┐
+                      → GPT-4 OCR ──┼→ LLM Combine → JSON Repair → Response
+                      → Link Extract┘
+```
 
-- Python 3.12.3
-- MongoDB 6.0+
-- pip (latest version)
-- Docker (optional, for containerization)
-- Tesseract OCR:
-  ```bash
-  apt-get install tesseract-ocr tesseract-ocr-eng libtesseract-dev libleptonica-dev pkg-config
-  TESSDATA_PREFIX=$(dpkg -L tesseract-ocr-eng | grep tessdata$)
-  echo "Set TESSDATA_PREFIX=${TESSDATA_PREFIX}"
-  ```
+## Configuration
 
 ### Environment Variables
 
-Create a `.env` file with the following variables:
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `MONGODB` | MongoDB connection string | Yes |
+| `MONGODB_DATABASE` | Database name (default: resumes) | No |
+| `SECRET_KEY` | JWT signing secret (min 32 chars) | Yes |
+| `OPENAI_API_KEY` | OpenAI API key for GPT-4o | Yes |
+| `DOCUMENT_INTELLIGENCE_API_KEY` | Azure Document Intelligence key | Yes |
+| `DOCUMENT_INTELLIGENCE_ENDPOINT` | Azure endpoint URL | Yes |
+| `CORS_ORIGINS` | Allowed CORS origins (comma-separated) | No |
+| `LOG_LEVEL` | Logging level (DEBUG, INFO, WARNING, ERROR) | No |
+| `ENVIRONMENT` | Environment name (development, production) | No |
+
+### Example `.env` file
 
 ```env
-# Server Configuration
-PORT=8000
-DEBUG=True
-ENVIRONMENT=development
-
-# MongoDB Configuration
-MONGODB_URL=mongodb://localhost:27017
-MONGODB_DB_NAME=resume_service
-
-# Azure Configuration
-AZURE_ENDPOINT=your_azure_endpoint
-AZURE_API_KEY=your_azure_api_key
+# Database
+MONGODB=mongodb://localhost:27017
+MONGODB_DATABASE=resumes
 
 # Security
-JWT_SECRET_KEY=your_jwt_secret
-JWT_ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+SECRET_KEY=your-super-secret-key-minimum-32-characters
+
+# External Services
+OPENAI_API_KEY=sk-...
+DOCUMENT_INTELLIGENCE_API_KEY=your-azure-key
+DOCUMENT_INTELLIGENCE_ENDPOINT=https://your-resource.cognitiveservices.azure.com
+
+# Optional
+CORS_ORIGINS=http://localhost:3000,http://localhost:8080
+LOG_LEVEL=INFO
+ENVIRONMENT=development
 ```
 
-### Installation
+## Development
 
-1. Clone the repository:
-   ```bash
-   git clone <repository-url>
-   cd resume_service
-   ```
+### Running Tests
 
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Set up environment variables by copying `.env.example` to `.env` and updating the values.
-
-4. Run the service:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
-
-### Docker Setup
-
-1. Build the Docker image:
-   ```bash
-   docker build -t resume_service .
-   ```
-
-2. Run the container:
-   ```bash
-   docker run -p 8000:8000 --env-file .env resume_service
-   ```
-
-## Development Guidelines
-
-### Code Style
-
-- Follow PEP 8 guidelines
-- Use type hints for all function parameters and return values
-- Document all functions and classes using docstrings
-- Use async/await for I/O-bound operations
-
-### Testing
-
-Run tests using pytest:
 ```bash
+# Run all tests
 pytest
-```
 
-For coverage report:
-```bash
+# Run with coverage
 pytest --cov=app --cov-report=term-missing
+
+# Run specific test file
+pytest app/tests/test_resume_parser.py -v
 ```
 
-### Logging
+### Code Quality
 
-Logs are configured in `app/core/logging_config.py`. The service uses structured logging with the following levels:
-- DEBUG: Detailed information for debugging
-- INFO: General operational information
-- WARNING: Warning messages for potential issues
-- ERROR: Error messages for actual problems
-- CRITICAL: Critical issues requiring immediate attention
+```bash
+# Format code
+black app/
+isort app/
 
-## API Documentation
+# Lint
+flake8 app/
 
-[Previous API documentation content remains unchanged...]
+# Type check
+mypy app/
+
+# Security scan
+bandit -r app/ -x app/tests/
+```
+
+### Pre-commit Hooks
+
+```bash
+# Install pre-commit hooks
+pre-commit install
+
+# Run manually
+pre-commit run --all-files
+```
+
+## Deployment
+
+### Docker
+
+```bash
+# Build production image
+docker build -t resume-parser-service:latest .
+
+# Run container
+docker run -p 8000:8000 --env-file .env resume-parser-service:latest
+```
+
+### Docker Compose (with MongoDB)
+
+```bash
+# Production
+docker-compose -f docker-compose.yml up -d
+
+# Development with hot reload
+docker-compose up -d
+
+# With MongoDB admin UI
+docker-compose --profile tools up -d
+```
+
+### Kubernetes
+
+The service includes Kubernetes-ready health endpoints:
+- `/live` - Liveness probe (is the process running?)
+- `/ready` - Readiness probe (is the service ready to accept traffic?)
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **MongoDB Connection Issues**
-   - Verify MongoDB is running: `systemctl status mongodb`
-   - Check connection string in `.env`
-   - Ensure network connectivity
+**MongoDB Connection Failed**
+```bash
+# Check MongoDB is running
+docker-compose ps mongodb
 
-2. **PDF Processing Errors**
-   - Verify Tesseract OCR installation
-   - Check PDF file permissions
-   - Ensure sufficient system memory
+# Check connection string
+echo $MONGODB
+```
 
-3. **Authentication Issues**
-   - Verify JWT secret key configuration
-   - Check token expiration settings
-   - Ensure proper token format in requests
+**PDF Processing Errors**
+```bash
+# Verify Tesseract installation
+tesseract --version
 
-## Contributing
+# Check poppler installation
+pdftoppm -v
+```
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-### Pull Request Guidelines
-
-- Include tests for new functionality
-- Update documentation as needed
-- Follow the existing code style
-- Keep changes focused and atomic
+**Authentication Errors**
+- Ensure `SECRET_KEY` is at least 32 characters
+- Check token expiration (default: 30 minutes)
+- Verify token format: `Bearer <token>`
 
 ## License
 
-[Your License Here]
+MIT License - see [LICENSE](LICENSE) for details.
 
----
+## Contributing
 
-**Note:** Ensure MongoDB is running before starting the application.
-
-For more detailed information about the resume microservice and additional endpoints, please refer to the API documentation.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
