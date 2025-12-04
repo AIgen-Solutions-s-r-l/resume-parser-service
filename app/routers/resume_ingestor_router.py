@@ -3,7 +3,9 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
 from io import BytesIO
 from PyPDF2 import PdfReader, errors
+
 from app.core.auth import get_current_user
+from app.core.config import settings
 from app.core.logging_config import LogConfig
 from app.core.exceptions import InvalidResumeDataError, ResumeNotFoundError
 from app.schemas.resume import UpdateResume, AddResume, GetResume
@@ -16,6 +18,8 @@ from app.services.resume_service import (
 
 # Constants
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+ALLOWED_CONTENT_TYPES = {"application/pdf"}
+PDF_MAGIC_BYTES = b"%PDF"
 
 # Logger
 logger = LogConfig.get_logger()
@@ -31,46 +35,103 @@ router = APIRouter(
     },
 )
 
-def validate_file_size_and_format(file: UploadFile) -> bytes:
+
+async def validate_file_size_and_format(file: UploadFile) -> bytes:
     """
-    Validate file size and format. Log details and return file content if valid.
+    Validate file size, MIME type, and PDF format with streaming support.
 
     Args:
-        file (UploadFile): Uploaded file to validate.
+        file: Uploaded file to validate.
 
     Returns:
-        bytes: Content of the uploaded file.
+        Content of the uploaded file as bytes.
 
     Raises:
-        HTTPException: If file size exceeds the limit or format is invalid.
+        HTTPException: If file fails any validation check.
     """
-    file.file.seek(0, 2)
-    size = file.file.tell()
-    file.file.seek(0)
-
-    if size > MAX_FILE_SIZE:
+    # Validate content type from header
+    if file.content_type not in ALLOWED_CONTENT_TYPES:
         logger.warning(
-            "File too large",
-            extra={"event_type": "file_size_error", "file_size": size, "max_size": MAX_FILE_SIZE},
+            "Invalid content type",
+            extra={
+                "event_type": "file_validation_error",
+                "content_type": file.content_type,
+                "filename": file.filename,
+            },
         )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="File size exceeds the 10 MB limit.",
+            detail=f"Invalid file type. Only PDF files are allowed (got {file.content_type}).",
         )
 
-    file_bytes = file.file.read()
+    # Read file with size limit check during streaming
+    chunks = []
+    total_size = 0
 
+    while True:
+        chunk = await file.read(8192)  # 8KB chunks
+        if not chunk:
+            break
+
+        total_size += len(chunk)
+        if total_size > MAX_FILE_SIZE:
+            logger.warning(
+                "File too large",
+                extra={
+                    "event_type": "file_size_error",
+                    "file_size": total_size,
+                    "max_size": MAX_FILE_SIZE,
+                },
+            )
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=f"File size exceeds the {MAX_FILE_SIZE // (1024 * 1024)} MB limit.",
+            )
+
+        chunks.append(chunk)
+
+    file_bytes = b"".join(chunks)
+
+    # Validate PDF magic bytes
+    if not file_bytes.startswith(PDF_MAGIC_BYTES):
+        logger.warning(
+            "Invalid PDF magic bytes",
+            extra={"event_type": "file_validation_error", "filename": file.filename},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid file format. File does not appear to be a valid PDF.",
+        )
+
+    # Validate PDF structure
     try:
-        PdfReader(BytesIO(file_bytes)).pages[0]  # Validate PDF
-        logger.info("File validated successfully", extra={"event_type": "file_validation"})
-    except (errors.PdfStreamError, IndexError):
+        pdf_reader = PdfReader(BytesIO(file_bytes))
+        if len(pdf_reader.pages) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="PDF file contains no pages.",
+            )
+        logger.info(
+            "File validated successfully",
+            extra={
+                "event_type": "file_validation",
+                "filename": file.filename,
+                "size": total_size,
+                "pages": len(pdf_reader.pages),
+            },
+        )
+    except errors.PdfStreamError as e:
         logger.warning(
-            "Invalid file format",
-            extra={"event_type": "file_format_error", "file_name": file.filename},
+            "Invalid PDF structure",
+            extra={
+                "event_type": "file_format_error",
+                "filename": file.filename,
+                "error": str(e),
+            },
         )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid file format. Only PDFs are allowed.",
+            detail="Invalid PDF file. The file structure is corrupted.",
         )
 
     return file_bytes
@@ -223,7 +284,7 @@ async def update_user_resume(resume_data: UpdateResume, current_user=Depends(get
 async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get_current_user)) -> GetResume:
     """Convert a PDF resume to JSON."""
     try:
-        pdf_bytes = validate_file_size_and_format(pdf_file)
+        pdf_bytes = await validate_file_size_and_format(pdf_file)
         resume_json = await generate_resume_json_from_pdf(pdf_bytes)
 
         # Serialize the resume_json if it's a dictionary

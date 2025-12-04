@@ -11,10 +11,14 @@ from app.services.resume_service import resume_parser
 
 from concurrent.futures import ThreadPoolExecutor
 
-# Testa la connessione prima
-test_connection(settings.syslog_host, settings.syslog_port)
+# Validate production settings at startup
+settings.validate_production_settings()
 
-# Inizializza il logger
+# Test logstash connection if enabled
+if settings.enable_logstash:
+    test_connection(settings.syslog_host, settings.syslog_port)
+
+# Initialize logger
 logger = init_logging(settings)
 
 @asynccontextmanager
@@ -44,10 +48,10 @@ logger.info(
     }
 )
 
-# Configura il middleware CORS
+# Configure CORS middleware with settings
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
