@@ -1,50 +1,119 @@
-from fastapi import APIRouter, HTTPException, status
-from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
+# app/routers/healthcheck_router.py
+"""
+Health check endpoint router.
+"""
+from fastapi import APIRouter, status
+from fastapi.responses import JSONResponse
 
-from app.routers.healthchecks.fastapi_healthcheck import HealthCheckFactory, healthCheckRoute
-from app.routers.healthchecks.fastapi_healthcheck_mongodb import HealthCheckMongoDB
-from app.core.config import settings
-
+from app.core.healthcheck import (
+    HealthCheckResponse,
+    HealthCheckRunner,
+    HealthStatus,
+    MongoDBHealthCheck,
+)
 
 router = APIRouter(tags=["healthcheck"])
 
 
 @router.get(
     "/healthcheck",
-    description="Health check endpoint",
+    response_model=HealthCheckResponse,
     responses={
-        200: {"description": "Health check passed"},
-        503: {"description": "Service unavailable - health check failed"},
+        200: {"description": "All health checks passed"},
+        503: {"description": "One or more health checks failed"},
     },
 )
-async def health_check():
+async def health_check() -> JSONResponse:
     """
     Perform health checks on service dependencies.
 
     Returns:
         Health check results for all registered checks.
-
-    Raises:
-        HTTPException: 503 if health checks fail
     """
-    _healthChecks = HealthCheckFactory()
-    _healthChecks.add(
-        HealthCheckMongoDB(
-            connection_uri=settings.mongodb,
-            alias="mongo db",
-            tags=("mongo", "db"),
-        )
+    runner = HealthCheckRunner()
+    runner.add(MongoDBHealthCheck())
+
+    result = await runner.run()
+
+    status_code = (
+        status.HTTP_200_OK
+        if result.status == HealthStatus.HEALTHY
+        else status.HTTP_503_SERVICE_UNAVAILABLE
     )
 
-    try:
-        return await healthCheckRoute(factory=_healthChecks)
-    except (ConnectionFailure, ServerSelectionTimeoutError) as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Database health check failed: {e}",
+    return JSONResponse(
+        status_code=status_code,
+        content=result.model_dump(),
+    )
+
+
+@router.get(
+    "/health",
+    response_model=HealthCheckResponse,
+    responses={
+        200: {"description": "Service is healthy"},
+        503: {"description": "Service is unhealthy"},
+    },
+)
+async def health() -> JSONResponse:
+    """
+    Simple health endpoint (alias for /healthcheck).
+
+    Returns:
+        Health check results.
+    """
+    return await health_check()
+
+
+@router.get(
+    "/ready",
+    responses={
+        200: {"description": "Service is ready to accept requests"},
+        503: {"description": "Service is not ready"},
+    },
+)
+async def readiness() -> JSONResponse:
+    """
+    Kubernetes readiness probe endpoint.
+
+    Checks if the service is ready to accept traffic.
+
+    Returns:
+        Readiness status.
+    """
+    runner = HealthCheckRunner()
+    runner.add(MongoDBHealthCheck())
+
+    result = await runner.run()
+
+    if result.status == HealthStatus.HEALTHY:
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"status": "ready"},
         )
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=f"Health check configuration error: {e}",
-        )
+
+    return JSONResponse(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        content={"status": "not ready", "reason": "dependency check failed"},
+    )
+
+
+@router.get(
+    "/live",
+    responses={
+        200: {"description": "Service is alive"},
+    },
+)
+async def liveness() -> JSONResponse:
+    """
+    Kubernetes liveness probe endpoint.
+
+    Simple check that the service process is running.
+
+    Returns:
+        Liveness status.
+    """
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"status": "alive"},
+    )
