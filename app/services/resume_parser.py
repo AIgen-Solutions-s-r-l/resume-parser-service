@@ -1,61 +1,101 @@
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import os
-import logging
 import base64
 import fitz
 from io import BytesIO
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from tempfile import NamedTemporaryFile
 from pdf2image import convert_from_path
 from fix_busted_json import repair_json
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
+
+from app.core.config import settings
+from app.core.logging_config import LogConfig
 from app.services.prompt import (
     BASE_OCR_PROMPT,
     COMBINATION_OCR_PROMPT,
     SINGLE_CALL_PROMPT,
 )
 from app.services.read_azure import analyze_read
-from app.core.config import settings
 
 
-logger = logging.getLogger(__name__)
+logger = LogConfig.get_logger()
 
 
 class ResumeParser:
     """
-    A single class that handles:
-    - External OCR service
-    - JSON extraction and repair
-    - Combining results from both approaches via another LLM call
+    Resume parser using dual OCR strategy.
+
+    Combines Azure Document Intelligence and OpenAI GPT-4o Vision for
+    accurate resume parsing. Uses async patterns throughout for efficiency.
+
+    Features:
+    - Azure Document Intelligence for text extraction
+    - OpenAI GPT-4o Vision for visual understanding (PDFs <= 5 pages)
+    - LLM-powered combination of OCR results
+    - Automatic JSON repair
+    - Retry logic with exponential backoff
     """
 
-    def __init__(self, model_name: str = "gpt-4o-mini", openai_api_key: str = None):
+    def __init__(
+        self,
+        model_name: str = "gpt-4o-mini",
+        openai_api_key: Optional[str] = None,
+        max_retries: int = 3,
+        retry_delay: int = 5,
+    ):
         """
-        :param model_name: Name of the model with vision + text capabilities.
-        :param openai_api_key: Your OpenAI API key.
+        Initialize the resume parser.
+
+        Args:
+            model_name: OpenAI model name for vision and text processing
+            openai_api_key: OpenAI API key (uses settings if not provided)
+            max_retries: Maximum retry attempts for OCR operations
+            retry_delay: Delay between retries in seconds
         """
         self.openai_api_key = openai_api_key or settings.openai_api_key
         if not self.openai_api_key:
             raise ValueError("OpenAI API key not provided.")
 
-        # Initialize the ChatOpenAI client
         self.model_name = model_name
-        self.llm = ChatOpenAI(
-            model_name=self.model_name, openai_api_key=self.openai_api_key
-        )
-        self._executor: ThreadPoolExecutor | None = None
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
 
-    def set_executor(self, executor: ThreadPoolExecutor):
-        """Inject the shared ThreadPoolExecutor after initialization."""
+        # Initialize the ChatOpenAI client
+        self.llm = ChatOpenAI(
+            model_name=self.model_name,
+            openai_api_key=self.openai_api_key,
+        )
+        self._executor: Optional[ThreadPoolExecutor] = None
+
+    def set_executor(self, executor: ThreadPoolExecutor) -> None:
+        """
+        Inject the shared ThreadPoolExecutor.
+
+        Args:
+            executor: ThreadPoolExecutor for CPU-bound operations
+        """
         self._executor = executor
 
     def _process_file_to_images_base64(
         self, file_path: str, image_format: str = "PNG"
     ) -> List[str]:
         """
-        Converts a PDF file into a list of base64-encoded images (one per page).
+        Convert PDF pages to base64-encoded images.
+
+        This is a CPU-bound operation that should be run in a thread pool.
+
+        Args:
+            file_path: Path to the PDF file
+            image_format: Output image format (PNG or JPEG)
+
+        Returns:
+            List of base64-encoded image strings
+
+        Raises:
+            ValueError: If PDF processing fails
         """
         try:
             images = convert_from_path(file_path)
@@ -67,12 +107,21 @@ class ResumeParser:
                 images_base64.append(image_base64)
             return images_base64
         except Exception as e:
+            logger.error(
+                "Failed to convert PDF to images",
+                extra={"event_type": "pdf_conversion_error", "error": str(e)},
+            )
             raise ValueError(f"Error processing PDF file: {str(e)}")
 
     async def _send_images_to_model(self, images_data: List[str]) -> str:
         """
-        Sends a batch of base64-encoded images along with the OCR prompt to the model,
-        and returns the model's response.
+        Send images to the LLM for OCR processing.
+
+        Args:
+            images_data: List of base64-encoded image strings
+
+        Returns:
+            Model response as string
         """
         images_prompt = [
             {
@@ -91,181 +140,284 @@ class ResumeParser:
         response = await self.llm.ainvoke([message])
         return str(response.content)
 
-    async def _convert_pdf_to_final_response(
+    async def _process_images_async(self, file_path: str) -> List[str]:
+        """
+        Convert PDF to images asynchronously using thread pool.
+
+        Args:
+            file_path: Path to the PDF file
+
+        Returns:
+            List of base64-encoded image strings
+        """
+        loop = asyncio.get_running_loop()
+
+        if self._executor:
+            # Run CPU-bound image conversion in thread pool
+            return await loop.run_in_executor(
+                self._executor,
+                self._process_file_to_images_base64,
+                file_path,
+            )
+        else:
+            # Fallback: run in default executor
+            return await loop.run_in_executor(
+                None,
+                self._process_file_to_images_base64,
+                file_path,
+            )
+
+    async def _convert_pdf_to_llm_ocr(
         self, file_path: str, batch_size: int = 5
     ) -> str:
         """
-        Orchestrates:
-        - Converting PDF pages to images
-        - Sending them to the model in batches
-        - Combining the responses into a final JSON-like string
+        Convert PDF to text using LLM-based OCR.
+
+        Processes pages in batches for efficiency when dealing with
+        multi-page documents.
+
+        Args:
+            file_path: Path to the PDF file
+            batch_size: Number of pages to process per batch
+
+        Returns:
+            Combined OCR text from all pages
         """
-        pdf_base64_list = self._process_file_to_images_base64(file_path)
+        # Convert PDF to images in thread pool
+        pdf_base64_list = await self._process_images_async(file_path)
+
+        # Process images in batches concurrently
         tasks = [
             self._send_images_to_model(pdf_base64_list[i : i + batch_size])
             for i in range(0, len(pdf_base64_list), batch_size)
         ]
 
         parsed_chunks = await asyncio.gather(*tasks)
-        final_response = "\n".join(parsed_chunks).strip()
-        return final_response
+        return "\n".join(parsed_chunks).strip()
 
-    def _convert_sync(self, file_path: str) -> str:
+    def _extract_links_sync(self, pdf_file_path: str) -> List[str]:
         """
-        A synchronous wrapper to handle the async convert logic.
-        """
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            response = loop.run_until_complete(
-                self._convert_pdf_to_final_response(file_path)
-            )
-            return response
-        finally:
-            loop.close()
+        Extract hyperlinks from PDF (synchronous).
 
-    def _parse_pdf_file(self, pdf_path: str) -> str:
-        """
-        Directly parse the PDF file using the LLM-based OCR and return raw JSON-like response.
-        """
-        return self._convert_sync(pdf_path)
+        Args:
+            pdf_file_path: Path to the PDF file
 
-    def extract_links_from_pdf(self, pdf_file_path):
+        Returns:
+            List of URLs found in the PDF
+        """
         doc = fitz.open(pdf_file_path)
         urls = []
-        # Iterate over each page in the PDF
-        for page_num in range(len(doc)):
-            page = doc.load_page(page_num)  # Get the page
+        try:
+            for page_num in range(len(doc)):
+                page = doc.load_page(page_num)
+                links = page.get_links()
 
-            # Extract links from the page (links can be represented as actions)
-            links = page.get_links()
-
-            for link in links:
-                if "uri" in link:
-                    uri = link["uri"]
-                    if uri:
-                        urls.append(uri)
+                for link in links:
+                    if "uri" in link:
+                        uri = link["uri"]
+                        if uri:
+                            urls.append(uri)
+        finally:
+            doc.close()
         return urls
 
+    async def extract_links_from_pdf(self, pdf_file_path: str) -> List[str]:
+        """
+        Extract hyperlinks from PDF asynchronously.
+
+        Args:
+            pdf_file_path: Path to the PDF file
+
+        Returns:
+            List of URLs found in the PDF
+        """
+        loop = asyncio.get_running_loop()
+        if self._executor:
+            return await loop.run_in_executor(
+                self._executor, self._extract_links_sync, pdf_file_path
+            )
+        return await loop.run_in_executor(
+            None, self._extract_links_sync, pdf_file_path
+        )
+
     async def _combine_ocr_results(
-        self, external_ocr: str, llm_ocr: str, links: str
+        self, external_ocr: str, llm_ocr: Optional[str], links: List[str]
     ) -> str:
         """
-        Combine the results from the external OCR, LLM OCR if present and extracted links into a single JSON resume.
+        Combine OCR results into a single JSON resume.
+
+        Uses LLM to intelligently merge results from different OCR sources,
+        resolving conflicts and ensuring completeness.
+
+        Args:
+            external_ocr: Text from Azure Document Intelligence
+            llm_ocr: Text from GPT-4o Vision (None if skipped)
+            links: List of URLs extracted from PDF
+
+        Returns:
+            Combined JSON resume string
         """
+        links_str = "\n".join(links) if links else "No links found"
+
         if llm_ocr:
             combination_prompt = f"""
-                \nYou are provided with three OCR outputs from the same resume:
-                1. **EXTERNAL OCR**:\n {external_ocr}
-                2. **LLM OCR**:\n {llm_ocr}
-                3. **LINKS OCR**:\n {links}
+You are provided with three OCR outputs from the same resume:
+1. **EXTERNAL OCR**:
+{external_ocr}
 
-                Instructions:
-                - Please combine them into a single well-structured JSON resume.
-                - Use the external OCR text and the links OCR to fill in any missing details from the LLM OCR result
-                - and if there are conflicts, choose the most accurate information.
-                - Don't include a separate section for links.
-                - Don't add any other section or field that is not part of the provided JSON structure.
-                - Provide only the json code for the resume, without any explanations or additional text and also without ```json ```.
-                - In the projects section, incorporate information from both OCRs, ensuring to include the production titles and links. Include the link URLs as they correspond to the specific productions mentioned.
-                
-            """
-        else:  # Skipped the LLM OCR processing if the document has more than 5 pages
+2. **LLM OCR**:
+{llm_ocr}
+
+3. **EXTRACTED LINKS**:
+{links_str}
+
+Instructions:
+- Combine them into a single well-structured JSON resume.
+- Use the external OCR text and links to fill in missing details from the LLM OCR result.
+- If there are conflicts, choose the most accurate information.
+- Don't include a separate section for links - integrate them into relevant sections.
+- Don't add fields not part of the provided JSON structure.
+- Provide only the JSON code, without explanations or markdown formatting.
+- In the projects section, include production titles and corresponding links.
+"""
+        else:
             combination_prompt = f"""
-                \nYou are provided with two OCR outputs from the same resume:
-                1. **EXTERNAL OCR**:\n {external_ocr}
-                2. **LINKS OCR**:\n {links}
-                
-                {SINGLE_CALL_PROMPT}
-            """
+You are provided with two OCR outputs from the same resume:
+1. **EXTERNAL OCR**:
+{external_ocr}
+
+2. **EXTRACTED LINKS**:
+{links_str}
+
+{SINGLE_CALL_PROMPT}
+"""
         message = HumanMessage(content=combination_prompt)
         response = await self.llm.ainvoke([message])
         return response.content
 
     async def _parse_pdf_bytes_async(self, pdf_bytes: bytes) -> Dict[str, Any]:
         """
-        Given PDF bytes, writes them to a temporary file and:
-        - Create an EXTERNAL OCR with Azure
-        - (Parses the PDF using LLM OCR) if pages <= 5
-        - Extracts links from the PDF
-        - Combines the results via another LLM call
-        - Repairs the final JSON
+        Parse PDF bytes into structured resume JSON.
+
+        Pipeline:
+        1. Write bytes to temporary file
+        2. Run Azure OCR and LLM OCR concurrently (if <= 5 pages)
+        3. Extract links from PDF
+        4. Combine results via LLM
+        5. Repair and validate JSON
+
+        Args:
+            pdf_bytes: Raw PDF file content
+
+        Returns:
+            Parsed resume as dictionary
         """
-        loop = asyncio.get_event_loop()
+        # Write PDF to temporary file
         with NamedTemporaryFile(suffix=".pdf", delete=False) as tmp_file:
             tmp_file.write(pdf_bytes)
             tmp_file_path = tmp_file.name
 
-        attempt = 0
-        max_retries = 3
-        delay = 5
-        doc = fitz.open(tmp_file_path)
-        num_pages = len(doc)
-        logger.debug(f"PDF has {num_pages} pages", extra={"num_pages": num_pages})
-        while attempt < max_retries:
-            try:
-                # Step 1: Get external OCR and LLM response
-                if num_pages <= 5:
-                    # Proceed with the LLM response task if the document has 5 or fewer pages
-                    external_ocr_task = analyze_read(tmp_file_path)
-                    llm_response_task = loop.run_in_executor(
-                        self._executor, lambda: self._parse_pdf_file(tmp_file_path)
-                    )
-                    external_ocr, llm_response = await asyncio.gather(
-                        external_ocr_task, llm_response_task
-                    )
-                    # Write llm_response to json file
-                    # import json
-                    # with open("llm_response.json", "w") as f:
-                    #     json.dump(llm_response[0], f)
-                else:
-                    # print("Document has more than 5 pages. Skipping LLM processing.")
-                    external_ocr = await analyze_read(tmp_file_path)
-                    # write external_ocr to file
-                    # with open("external_ocr.txt", "w") as f:
-                    #     f.write(external_ocr)
-                    llm_response = None
+        try:
+            # Get page count
+            doc = fitz.open(tmp_file_path)
+            num_pages = len(doc)
+            doc.close()
 
-                # Step 2: Extract links from the PDF
-                links = self.extract_links_from_pdf(tmp_file_path)
+            logger.info(
+                "Starting PDF parsing",
+                extra={
+                    "event_type": "pdf_parse_start",
+                    "num_pages": num_pages,
+                    "use_llm_ocr": num_pages <= 5,
+                },
+            )
 
-                # Step 3: Combine both results via another LLM call
-                combined_response = await self._combine_ocr_results(
-                    external_ocr, llm_response, links
-                )
-
-                # Attempt to repair the final combined JSON
+            # Retry loop with exponential backoff
+            for attempt in range(self.max_retries):
                 try:
-                    final_json = repair_json(combined_response)
-                    return final_json
+                    # Step 1: Run OCR tasks concurrently
+                    if num_pages <= 5:
+                        # Use both Azure and LLM OCR for better accuracy
+                        external_ocr, llm_response = await asyncio.gather(
+                            analyze_read(tmp_file_path),
+                            self._convert_pdf_to_llm_ocr(tmp_file_path),
+                        )
+                    else:
+                        # Large documents: Azure only (LLM would be too slow/expensive)
+                        logger.debug(
+                            "Skipping LLM OCR for large document",
+                            extra={"num_pages": num_pages},
+                        )
+                        external_ocr = await analyze_read(tmp_file_path)
+                        llm_response = None
+
+                    # Step 2: Extract links (async)
+                    links = await self.extract_links_from_pdf(tmp_file_path)
+
+                    # Step 3: Combine results via LLM
+                    combined_response = await self._combine_ocr_results(
+                        external_ocr, llm_response, links
+                    )
+
+                    # Step 4: Repair JSON
+                    try:
+                        final_json = repair_json(combined_response)
+                        logger.info(
+                            "PDF parsing completed successfully",
+                            extra={"event_type": "pdf_parse_complete"},
+                        )
+                        return final_json
+                    except Exception as e:
+                        logger.error(
+                            "Failed to repair JSON",
+                            extra={
+                                "event_type": "json_repair_error",
+                                "error": str(e),
+                                "attempt": attempt + 1,
+                            },
+                        )
+                        return {"error": "Failed to parse the combined JSON."}
+
                 except Exception as e:
-                    logger.error(
-                        "Failed to parse the combined JSON.", extra={"error": str(e)}
-                    )
-                    return {"error": "Failed to parse the combined JSON."}
+                    if attempt < self.max_retries - 1:
+                        wait_time = self.retry_delay * (2 ** attempt)  # Exponential backoff
+                        logger.warning(
+                            f"Attempt {attempt + 1} failed, retrying...",
+                            extra={
+                                "event_type": "pdf_parse_retry",
+                                "attempt": attempt + 1,
+                                "wait_time": wait_time,
+                                "error": str(e),
+                            },
+                        )
+                        await asyncio.sleep(wait_time)
+                    else:
+                        logger.error(
+                            "All retry attempts failed",
+                            extra={
+                                "event_type": "pdf_parse_failed",
+                                "total_attempts": self.max_retries,
+                                "error": str(e),
+                            },
+                        )
+                        return {"error": "Failed to process PDF."}
 
-            except Exception as e:
-                attempt += 1
-                if attempt < max_retries:
-                    logger.warning(
-                        f"Attempt {attempt} failed. Retrying in {delay} seconds...",
-                        extra={"error": str(e)},
-                    )
-                    await asyncio.sleep(delay)  # Delay before retrying
-                else:
-                    logger.error("All retry attempts failed.", extra={"error": str(e)})
-                    return {"error": "Failed to process PDF."}
-
-            finally:
-                if os.path.exists(tmp_file_path):
-                    os.remove(tmp_file_path)
+        finally:
+            # Always clean up temp file
+            if os.path.exists(tmp_file_path):
+                os.remove(tmp_file_path)
 
     async def generate_resume_from_pdf_bytes(self, pdf_bytes: bytes) -> Dict[str, Any]:
         """
-        Given PDF bytes, extracts and returns a final JSON resume by:
-        - Getting external OCR result
-        - Combining them via an additional LLM call
-        - Repairing the final JSON
+        Generate structured JSON resume from PDF bytes.
+
+        This is the main entry point for resume parsing. It orchestrates
+        the entire OCR and parsing pipeline.
+
+        Args:
+            pdf_bytes: Raw PDF file content
+
+        Returns:
+            Parsed resume as dictionary, or error dict if parsing fails
         """
-        final_result = await self._parse_pdf_bytes_async(pdf_bytes)
-        return final_result
+        return await self._parse_pdf_bytes_async(pdf_bytes)

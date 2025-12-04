@@ -49,6 +49,18 @@ dependencies = [
 ]
 
 
+[project.optional-dependencies]
+dev = [
+    "black",
+    "isort",
+    "flake8",
+    "mypy",
+    "bandit",
+    "pre-commit",
+    "pytest-cov",
+    "testcontainers[mongodb]",
+]
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
