@@ -1,60 +1,100 @@
 from typing import Dict, Any, Optional
+
+from pymongo import ReturnDocument
+from pymongo.errors import PyMongoError, ConnectionFailure, OperationFailure
+
 from app.schemas.resume import ResumeBase
 from app.core.mongodb import collection_name
 from app.core.logging_config import LogConfig
-from pymongo import ReturnDocument
+from app.core.exceptions import (
+    ResumeNotFoundError,
+    DatabaseOperationError,
+)
 from app.services.resume_parser import ResumeParser
 
 logger = LogConfig.get_logger()
 
 resume_parser = ResumeParser()
 
-async def get_resume_by_user_id(user_id: int, version: Optional[str] = None) -> Dict[str, Any]:
-    try:
-        query = {"user_id": user_id}
-        if version:
-            query["version"] = version
 
+async def get_resume_by_user_id(user_id: int, version: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Retrieve a resume by user ID.
+
+    Args:
+        user_id: The user's ID
+        version: Optional version filter
+
+    Returns:
+        Resume document as dictionary
+
+    Raises:
+        ResumeNotFoundError: If resume doesn't exist
+        DatabaseOperationError: If database operation fails
+    """
+    query = {"user_id": user_id}
+    if version:
+        query["version"] = version
+
+    try:
         resume = await collection_name.find_one(query)
-        if not resume:
-            logger.warning("Resume not found", extra={
+    except ConnectionFailure as e:
+        logger.error(
+            "Database connection failed",
+            extra={
+                "event_type": "database_connection_error",
+                "user_id": user_id,
+                "error": str(e),
+            },
+        )
+        raise DatabaseOperationError("Database connection failed")
+    except OperationFailure as e:
+        logger.error(
+            "Database operation failed",
+            extra={
+                "event_type": "database_operation_error",
+                "user_id": user_id,
+                "error": str(e),
+            },
+        )
+        raise DatabaseOperationError(f"Database query failed: {e}")
+
+    if not resume:
+        logger.warning(
+            "Resume not found",
+            extra={
                 "event_type": "resume_not_found",
                 "user_id": user_id,
-                "version": version
-            })
-            return {"error": f"Resume not found for user ID: {user_id}"}
+                "version": version,
+            },
+        )
+        return {"error": f"Resume not found for user ID: {user_id}"}
 
-        resume["_id"] = str(resume["_id"])
-
-        logger.info("Resume retrieved", extra={
+    resume["_id"] = str(resume["_id"])
+    logger.info(
+        "Resume retrieved",
+        extra={
             "event_type": "resume_retrieved",
             "user_id": user_id,
-            "version": version
-        })
-        return resume
-
-    except Exception as e:
-        logger.error(f"Error retrieving resume: {str(e)}", extra={
-            "event_type": "resume_retrieval_error",
-            "user_id": user_id,
             "version": version,
-            "error_type": type(e).__name__,
-            "error_details": str(e)
-        })
-        return {"error": f"Error retrieving resume: {str(e)}"}
+        },
+    )
+    return resume
 
 async def add_resume(resume: ResumeBase, current_user: int) -> Dict[str, Any]:
     """
-    Add a new resume for the user. If an existing resume is found, delete it 
-    before inserting the new one. Handles consistency manually since 
-    transactions are unavailable.
+    Add a new resume for the user. If an existing resume is found, delete it
+    before inserting the new one.
 
     Args:
-        resume (ResumeBase): The resume data to insert (without user_id).
-        current_user (int): The ID of the current user.
+        resume: The resume data to insert (without user_id).
+        current_user: The ID of the current user.
 
     Returns:
-        Dict[str, Any]: The inserted resume document or an error message.
+        The inserted resume document or an error message.
+
+    Raises:
+        DatabaseOperationError: If database operation fails
     """
     try:
         # Check for an existing resume for this user
@@ -66,14 +106,12 @@ async def add_resume(resume: ResumeBase, current_user: int) -> Dict[str, Any]:
             )
             delete_result = await collection_name.delete_one({"user_id": current_user})
             if delete_result.deleted_count == 0:
-                raise RuntimeError(
-                    "Failed to delete existing resume during replacement."
+                raise DatabaseOperationError(
+                    "Failed to delete existing resume during replacement"
                 )
 
         # Convert the Pydantic model to a dictionary
         resume_dict = resume.model_dump()
-
-        # Manually add user_id to the dictionary
         resume_dict["user_id"] = current_user
 
         # Insert the new resume data
@@ -84,147 +122,193 @@ async def add_resume(resume: ResumeBase, current_user: int) -> Dict[str, Any]:
                 inserted_resume["_id"] = str(inserted_resume["_id"])
                 logger.info(
                     "Resume created successfully",
-                    extra={
-                        "event_type": "resume_created",
-                        "user_id": current_user
-                    },
+                    extra={"event_type": "resume_created", "user_id": current_user},
                 )
                 return inserted_resume
 
-        # Raise an exception if insertion fails
-        raise RuntimeError("Failed to insert new resume.")
+        raise DatabaseOperationError("Failed to insert new resume")
 
-    except Exception as e:
+    except (ConnectionFailure, OperationFailure) as e:
         logger.error(
-            "Unexpected error during resume creation",
+            "Database error during resume creation",
             exc_info=True,
             extra={
-                "event_type": "unexpected_error",
+                "event_type": "database_error",
                 "user_id": current_user,
-                "error_details": str(e),
-                "resume_data": resume.model_dump(exclude_unset=True),
+                "error": str(e),
             },
         )
-        return {"error": "UnexpectedError", "message": str(e)}
+        raise DatabaseOperationError(f"Database operation failed: {e}")
+    except DatabaseOperationError:
+        raise
+    except PyMongoError as e:
+        logger.error(
+            "MongoDB error during resume creation",
+            exc_info=True,
+            extra={
+                "event_type": "mongodb_error",
+                "user_id": current_user,
+                "error": str(e),
+            },
+        )
+        return {"error": "DatabaseError", "message": str(e)}
 
 async def update_resume(resume: ResumeBase, user_id: int) -> Dict[str, Any]:
+    """
+    Update an existing resume.
+
+    Args:
+        resume: The updated resume data
+        user_id: The user's ID
+
+    Returns:
+        Updated resume document
+
+    Raises:
+        ResumeNotFoundError: If resume doesn't exist
+        DatabaseOperationError: If database operation fails
+    """
     try:
         existing_resume = await collection_name.find_one({"user_id": user_id})
-        if not existing_resume:
-            logger.warning("Resume not found for update", extra={
-                "event_type": "resume_not_found",
-                "user_id": user_id
-            })
-            return {"error": f"Resume not found for user ID: {user_id}"}
+    except (ConnectionFailure, OperationFailure) as e:
+        logger.error(
+            "Database error during resume lookup",
+            extra={"event_type": "database_error", "user_id": user_id, "error": str(e)},
+        )
+        raise DatabaseOperationError(f"Database query failed: {e}")
 
-        resume_data = resume.model_dump()
+    if not existing_resume:
+        logger.warning(
+            "Resume not found for update",
+            extra={"event_type": "resume_not_found", "user_id": user_id},
+        )
+        return {"error": f"Resume not found for user ID: {user_id}"}
 
-        # Perform a diff to identify changes (Exclude the 'vector' key from the comparison)
-        update_data = {}
-        for key, value in resume_data.items():
-            if key != "vector" and value is not None and existing_resume.get(key) != value:
-                update_data[key] = value
+    resume_data = resume.model_dump()
 
-        if not update_data:
-            logger.info("No changes detected for update", extra={
-                "event_type": "no_changes_detected",
-                "user_id": user_id
-            })
-            return {"message": "No changes detected"}
+    # Perform a diff to identify changes (Exclude the 'vector' key from the comparison)
+    update_data = {}
+    for key, value in resume_data.items():
+        if key != "vector" and value is not None and existing_resume.get(key) != value:
+            update_data[key] = value
 
+    if not update_data:
+        logger.info(
+            "No changes detected for update",
+            extra={"event_type": "no_changes_detected", "user_id": user_id},
+        )
+        return {"message": "No changes detected"}
+
+    try:
         updated_resume = await collection_name.find_one_and_update(
             {"user_id": user_id},
             {"$set": resume_data},
-            return_document=ReturnDocument.AFTER
+            return_document=ReturnDocument.AFTER,
         )
+    except (ConnectionFailure, OperationFailure) as e:
+        logger.error(
+            "Database error during resume update",
+            extra={"event_type": "database_error", "user_id": user_id, "error": str(e)},
+        )
+        raise DatabaseOperationError(f"Database update failed: {e}")
 
-        if updated_resume:
-            updated_resume["_id"] = str(updated_resume["_id"])
-            logger.info("Resume updated", extra={
-                "event_type": "resume_updated",
-                "user_id": user_id
-            })
-            return updated_resume
-        else:
-            logger.error("Failed to retrieve updated resume", extra={
-                "event_type": "resume_update_error",
-                "user_id": user_id
-            })
-            return {"error": "Failed to retrieve updated resume"}
+    if updated_resume:
+        updated_resume["_id"] = str(updated_resume["_id"])
+        logger.info(
+            "Resume updated",
+            extra={"event_type": "resume_updated", "user_id": user_id},
+        )
+        return updated_resume
 
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}", extra={
-            "event_type": "resume_update_error",
-            "user_id": user_id,
-            "error_type": type(e).__name__,
-            "error_details": str(e)
-        })
-        return {"error": f"Unexpected error: {str(e)}"}
+    logger.error(
+        "Failed to retrieve updated resume",
+        extra={"event_type": "resume_update_error", "user_id": user_id},
+    )
+    return {"error": "Failed to retrieve updated resume"}
 
 
 async def delete_resume(user_id: int) -> Dict[str, Any]:
+    """
+    Delete a user's resume.
+
+    Args:
+        user_id: The user's ID
+
+    Returns:
+        Success message or error
+
+    Raises:
+        DatabaseOperationError: If database operation fails
+    """
     try:
         existing_resume = await collection_name.find_one({"user_id": user_id})
         if not existing_resume:
-            logger.warning("Resume not found for deletion", extra={
-                "event_type": "resume_not_found",
-                "user_id": user_id
-            })
+            logger.warning(
+                "Resume not found for deletion",
+                extra={"event_type": "resume_not_found", "user_id": user_id},
+            )
             return {"error": f"Resume not found for user ID: {user_id}"}
 
         result = await collection_name.delete_one({"user_id": user_id})
         if result.deleted_count > 0:
-            logger.info("Resume deleted", extra={
-                "event_type": "resume_deleted",
-                "user_id": user_id
-            })
+            logger.info(
+                "Resume deleted",
+                extra={"event_type": "resume_deleted", "user_id": user_id},
+            )
             return {"message": f"Resume for user ID {user_id} deleted successfully."}
-        else:
-            logger.error("Resume deletion failed", extra={
-                "event_type": "resume_deletion_error",
-                "user_id": user_id
-            })
-            return {"error": f"Failed to delete resume for user ID: {user_id}"}
 
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}", extra={
-            "event_type": "resume_deletion_error",
-            "user_id": user_id,
-            "error_type": type(e).__name__,
-            "error_details": str(e)
-        })
-        return {"error": f"Unexpected error: {str(e)}"}
+        logger.error(
+            "Resume deletion failed",
+            extra={"event_type": "resume_deletion_error", "user_id": user_id},
+        )
+        return {"error": f"Failed to delete resume for user ID: {user_id}"}
+
+    except (ConnectionFailure, OperationFailure) as e:
+        logger.error(
+            "Database error during resume deletion",
+            extra={"event_type": "database_error", "user_id": user_id, "error": str(e)},
+        )
+        raise DatabaseOperationError(f"Database operation failed: {e}")
     
 async def generate_resume_json_from_pdf(pdf_bytes: bytes) -> str:
-    """Given PDF bytes and OpenAI API key, returns the JSON resume."""
+    """
+    Generate JSON resume from PDF bytes.
+
+    Args:
+        pdf_bytes: The PDF file content as bytes
+
+    Returns:
+        JSON string of the parsed resume
+    """
     resume_data = await resume_parser.generate_resume_from_pdf_bytes(pdf_bytes)
-    with open("resume.json", "w") as f:
-        f.write(resume_data)
     return resume_data
+
 
 async def user_has_resume(user_id: int) -> bool:
     """
-    Check if the user with the given user_id has a resume in the database.
+    Check if the user has a resume in the database.
 
     Args:
-        user_id (int): The ID of the user.
+        user_id: The ID of the user.
 
     Returns:
-        bool: True if a resume exists for the user, False otherwise.
+        True if a resume exists for the user, False otherwise.
+
+    Raises:
+        DatabaseOperationError: If database operation fails
     """
     try:
-        # Query the collection to see if any document exists for this user_id
-        resume = await collection_name.find_one({"user_id": user_id}, projection={"_id": 1})
+        resume = await collection_name.find_one(
+            {"user_id": user_id}, projection={"_id": 1}
+        )
         return resume is not None
-    except Exception as e:
+    except (ConnectionFailure, OperationFailure) as e:
         logger.error(
-            f"Unexpected error while checking resume existence for user {user_id}: {str(e)}",
+            "Database error while checking resume existence",
             extra={
-                "event_type": "resume_existence_check_error",
+                "event_type": "database_error",
                 "user_id": user_id,
-                "error_type": type(e).__name__,
-                "error_details": str(e),
+                "error": str(e),
             },
         )
-        # Returning False here, but you can also choose to re-raise or handle differently
-        return False
+        raise DatabaseOperationError(f"Database query failed: {e}")

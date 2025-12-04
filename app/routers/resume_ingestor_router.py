@@ -4,10 +4,16 @@ from fastapi import APIRouter, HTTPException, Depends, status, UploadFile, File
 from io import BytesIO
 from PyPDF2 import PdfReader, errors
 
+from pydantic import ValidationError
+
 from app.core.auth import get_current_user
 from app.core.config import settings
 from app.core.logging_config import LogConfig
-from app.core.exceptions import InvalidResumeDataError, ResumeNotFoundError
+from app.core.exceptions import (
+    InvalidResumeDataError,
+    ResumeNotFoundError,
+    DatabaseOperationError,
+)
 from app.schemas.resume import UpdateResume, AddResume, GetResume
 from app.services.resume_service import (
     get_resume_by_user_id,
@@ -149,50 +155,42 @@ async def validate_file_size_and_format(file: UploadFile) -> bytes:
 )
 async def create_resume(resume_data: AddResume, current_user=Depends(get_current_user)) -> Any:
     """Create a new resume in the database."""
-    try:
-        logger.info(
-            "Attempting to add resume to the database",
-            extra={"event_type": "database_operation_start", "user_id": current_user},
-        )
-        result = await add_resume(resume_data, current_user)
-        
-        if "error" in result:
-            logger.error(
-                "Error encountered during resume creation",
-                extra={
-                    "event_type": "resume_creation_error",
-                    "user_id": current_user,
-                    "error_details": result["error"],
-                },
-            )
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail={"message": result["error"]}
-            )
+    logger.info(
+        "Attempting to add resume to the database",
+        extra={"event_type": "database_operation_start", "user_id": current_user},
+    )
 
-        logger.info(
-            "Resume created successfully",
-            extra={
-                "event_type": "resume_created",
-                "user_id": current_user,
-                "resume_id": result.get("resume_id", "unknown"),
-            },
-        )
-        return result
-    except Exception as e:
+    try:
+        result = await add_resume(resume_data, current_user)
+    except DatabaseOperationError as e:
         logger.error(
-            "Unexpected error during resume creation",
-            exc_info=True,
+            "Database error during resume creation",
+            extra={"event_type": "database_error", "user_id": current_user, "error": str(e)},
+        )
+        raise
+
+    if "error" in result:
+        logger.error(
+            "Error encountered during resume creation",
             extra={
-                "event_type": "unexpected_error",
+                "event_type": "resume_creation_error",
                 "user_id": current_user,
-                "error_details": str(e),
-                "resume_data": resume_data.model_dump(exclude_unset=True) if hasattr(resume_data, "model_dump") else str(resume_data),
+                "error_details": result["error"],
             },
         )
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while creating the resume.",
+            status_code=status.HTTP_400_BAD_REQUEST, detail={"message": result["error"]}
         )
+
+    logger.info(
+        "Resume created successfully",
+        extra={
+            "event_type": "resume_created",
+            "user_id": current_user,
+            "resume_id": result.get("resume_id", "unknown"),
+        },
+    )
+    return result
 
 @router.get(
     "/get",
@@ -209,26 +207,27 @@ async def get_resume(current_user=Depends(get_current_user)) -> Any:
     """Retrieve a user's resume from the database."""
     try:
         result = await get_resume_by_user_id(current_user)
-        if "error" in result:
-            logger.warning(
-                "Resume not found",
-                extra={"event_type": "resume_not_found", "user_id": current_user},
-            )
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail={"message": result["error"]}
-            )
-        logger.info("Resume retrieved", extra={"event_type": "resume_retrieved", "user_id": current_user})
-        return result
-    except Exception as e:
+    except DatabaseOperationError as e:
         logger.error(
-            "Unexpected error during resume retrieval",
-            exc_info=True,
-            extra={"event_type": "unexpected_error", "user_id": current_user, "error_details": str(e)},
+            "Database error during resume retrieval",
+            extra={"event_type": "database_error", "user_id": current_user, "error": str(e)},
+        )
+        raise
+
+    if "error" in result:
+        logger.warning(
+            "Resume not found",
+            extra={"event_type": "resume_not_found", "user_id": current_user},
         )
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while retrieving the resume.",
+            status_code=status.HTTP_404_NOT_FOUND, detail={"message": result["error"]}
         )
+
+    logger.info(
+        "Resume retrieved",
+        extra={"event_type": "resume_retrieved", "user_id": current_user},
+    )
+    return result
 
 @router.put(
     "/update",
@@ -246,30 +245,30 @@ async def update_user_resume(resume_data: UpdateResume, current_user=Depends(get
     """Update an existing resume."""
     try:
         result = await update_resume(resume_data, current_user)
-        logger.info("Resume updated", extra={"event_type": "resume_updated", "user_id": current_user})
-        return result
     except ResumeNotFoundError as e:
         logger.warning(
             "Resume not found during update",
-            extra={"event_type": "resume_not_found", "user_id": current_user, "error_details": str(e)},
+            extra={"event_type": "resume_not_found", "user_id": current_user, "error": str(e)},
         )
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={"message": str(e)})
     except InvalidResumeDataError as e:
         logger.warning(
             "Invalid resume data during update",
-            extra={"event_type": "invalid_resume_data", "user_id": current_user, "error_details": str(e)},
+            extra={"event_type": "invalid_resume_data", "user_id": current_user, "error": str(e)},
         )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"message": str(e)})
-    except Exception as e:
+    except DatabaseOperationError as e:
         logger.error(
-            "Unexpected error during resume update",
-            exc_info=True,
-            extra={"event_type": "unexpected_error", "user_id": current_user, "error_details": str(e)},
+            "Database error during resume update",
+            extra={"event_type": "database_error", "user_id": current_user, "error": str(e)},
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while updating the resume.",
-        )
+        raise
+
+    logger.info(
+        "Resume updated",
+        extra={"event_type": "resume_updated", "user_id": current_user},
+    )
+    return result
 
 @router.post(
     "/pdf_to_json",
@@ -283,59 +282,52 @@ async def update_user_resume(resume_data: UpdateResume, current_user=Depends(get
 )
 async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get_current_user)) -> GetResume:
     """Convert a PDF resume to JSON."""
-    try:
-        pdf_bytes = await validate_file_size_and_format(pdf_file)
-        resume_json = await generate_resume_json_from_pdf(pdf_bytes)
+    pdf_bytes = await validate_file_size_and_format(pdf_file)
+    resume_json = await generate_resume_json_from_pdf(pdf_bytes)
 
-        # Serialize the resume_json if it's a dictionary
-        if isinstance(resume_json, dict):
-            resume_json_str = json.dumps(resume_json)
-        else:
-            resume_json_str = resume_json
+    if not resume_json:
+        logger.error(
+            "Failed to generate resume JSON from PDF",
+            extra={"event_type": "resume_generation_error", "user_id": current_user},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to generate resume JSON from the PDF.",
+        )
 
-        # Retry the validation once if it fails (Only ONE retry)
-        for attempt in range(2):
-            try:
-                if not resume_json:
-                    logger.error(
-                        "Failed to generate resume JSON from PDF",
-                        extra={"event_type": "resume_generation_error", "user_id": current_user},
-                    )
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Failed to generate resume JSON from the PDF.",
-                    )
-                logger.info(
-                    "Resume JSON generated successfully",
-                    extra={"event_type": "resume_json_generated", "user_id": current_user},
-                )
-                return GetResume.model_validate_json(resume_json_str)
-            except Exception as validation_error:
-                if attempt == 1:
-                    logger.error(
-                        f"Validation attempt {attempt + 1} failed: {validation_error}",
-                        exc_info=True,
-                        extra={"event_type": "resume_validation_error", "user_id": current_user},
-                    )
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Validation failed for the resume JSON.",
-                    )
+    # Serialize the resume_json if it's a dictionary
+    if isinstance(resume_json, dict):
+        resume_json_str = json.dumps(resume_json)
+    else:
+        resume_json_str = resume_json
+
+    # Retry validation once if it fails
+    last_error = None
+    for attempt in range(2):
+        try:
+            result = GetResume.model_validate_json(resume_json_str)
+            logger.info(
+                "Resume JSON generated successfully",
+                extra={"event_type": "resume_json_generated", "user_id": current_user},
+            )
+            return result
+        except ValidationError as e:
+            last_error = e
+            if attempt == 0:
                 logger.warning(
                     f"Validation attempt {attempt + 1} failed, retrying...",
                     extra={"event_type": "resume_validation_retry", "user_id": current_user},
                 )
+            continue
 
-    except Exception as e:
-        logger.error(
-            "Unexpected error during PDF to JSON conversion: " + str(e),
-            exc_info=True,
-            extra={"event_type": "unexpected_error", "user_id": current_user, "error_details": str(e)},
-        )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while processing the PDF.",
-        )
+    logger.error(
+        f"Validation failed after retries: {last_error}",
+        extra={"event_type": "resume_validation_error", "user_id": current_user},
+    )
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Validation failed for the resume JSON.",
+    )
     
 @router.get(
     "/exists",
@@ -348,33 +340,22 @@ async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get
 async def check_resume_exists(current_user=Depends(get_current_user)) -> Any:
     """
     Check if the authenticated user has a resume.
-    
+
     Returns:
-        Dict[str, bool]: A simple JSON response containing the field "exists" 
-                         which indicates if the user's resume is present.
+        Dict with "exists" boolean indicating if the user's resume is present.
     """
+    logger.info(
+        "Checking if user has a resume",
+        extra={"event_type": "check_resume_exists", "user_id": current_user},
+    )
+
     try:
-        logger.info(
-            "Checking if user has a resume",
-            extra={"event_type": "check_resume_exists", "user_id": current_user},
-        )
-        
-        from app.services.resume_service import user_has_resume  # Ensure the import is correct and avoid circular imports
+        from app.services.resume_service import user_has_resume
         exists = await user_has_resume(current_user)
-
         return {"exists": exists}
-
-    except Exception as e:
+    except DatabaseOperationError as e:
         logger.error(
-            "Unexpected error during resume existence check",
-            exc_info=True,
-            extra={
-                "event_type": "unexpected_error",
-                "user_id": current_user,
-                "error_details": str(e),
-            },
+            "Database error during resume existence check",
+            extra={"event_type": "database_error", "user_id": current_user, "error": str(e)},
         )
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred while checking if the resume exists.",
-        )
+        raise

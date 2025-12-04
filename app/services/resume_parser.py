@@ -204,7 +204,7 @@ class ResumeParser:
         delay = 5
         doc = fitz.open(tmp_file_path)
         num_pages = len(doc)
-        num_pages = 10 # FIXED: to force always no intermediate llm call
+        logger.debug(f"PDF has {num_pages} pages", extra={"num_pages": num_pages})
         while attempt < max_retries:
             try:
                 # Step 1: Get external OCR and LLM response
