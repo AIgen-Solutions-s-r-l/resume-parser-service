@@ -1,77 +1,90 @@
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Union
+
 from .domain import HealthCheckInterface
-from .model import HealthCheckModel, HealthCheckEntityModel
 from .enum import HealthCheckStatusEnum
-from typing import List
-from datetime import datetime
+from .model import HealthCheckEntityModel, HealthCheckModel
 
 
 class HealthCheckFactory:
-    _healthItems: List[HealthCheckInterface]
-    _health: HealthCheckModel
+    """Factory for managing and running health checks."""
+
+    _health_items: List[HealthCheckInterface]
+    _health: Union[HealthCheckModel, Dict[str, Any]]
+    _entity_start_time: datetime
+    _entity_stop_time: datetime
+    _total_start_time: datetime
+    _total_stop_time: datetime
 
     def __init__(self) -> None:
-        self._healthItems = list()
+        self._health_items = list()
 
     def add(self, item: HealthCheckInterface) -> None:
-        self._healthItems.append(item)
+        """Add a health check item to the factory."""
+        self._health_items.append(item)
 
-    def __startTimer__(self, entityTimer: bool) -> None:
-        if entityTimer == True:
-            self._entityStartTime = datetime.now()
+    def _start_timer(self, entity_timer: bool) -> None:
+        """Start timing for entity or total check."""
+        if entity_timer:
+            self._entity_start_time = datetime.now()
         else:
-            self._totalStartTime = datetime.now()
+            self._total_start_time = datetime.now()
 
-    def __stopTimer__(self, entityTimer: bool) -> None:
-        if entityTimer == True:
-            self._entityStopTime = datetime.now()
+    def _stop_timer(self, entity_timer: bool) -> None:
+        """Stop timing for entity or total check."""
+        if entity_timer:
+            self._entity_stop_time = datetime.now()
         else:
-            self._totalStopTime = datetime.now()
+            self._total_stop_time = datetime.now()
 
-    def __getTimeTaken__(self, entityTimer: bool) -> datetime:
-        if entityTimer == True:
-            return self._entityStopTime - self._entityStartTime
-        return self._totalStopTime - self._totalStartTime
+    def _get_time_taken(self, entity_timer: bool) -> timedelta:
+        """Calculate time taken for entity or total check."""
+        if entity_timer:
+            return self._entity_stop_time - self._entity_start_time
+        return self._total_stop_time - self._total_start_time
 
-    async def __dumpModel__(self, model: HealthCheckModel) -> str:
-        """This goes and convert python objects to something a json object."""
-        l = list()
-        for i in model.entities:
-            i.status = i.status.value
-            i.timeTaken = str(i.timeTaken)
-            l.append(dict(i))
+    async def _dump_model(self, model: HealthCheckModel) -> Dict[str, Any]:
+        """Convert health check model to dictionary for JSON serialization."""
+        entities_list = []
+        for entity in model.entities:
+            entity.status = entity.status.value
+            entity.timeTaken = str(entity.timeTaken)
+            entities_list.append(dict(entity))
 
-        model.entities = l
+        model.entities = entities_list
         model.status = model.status.value
         model.totalTimeTaken = str(model.totalTimeTaken)
 
         return dict(model)
 
-    async def check(self) -> HealthCheckModel:
+    async def check(self) -> Dict[str, Any]:
+        """Run all health checks and return aggregated results."""
         self._health = HealthCheckModel()
-        self.__startTimer__(False)
-        for i in self._healthItems:
+        self._start_timer(False)
+
+        for item in self._health_items:
             # Generate the model
-            if not hasattr(i, "_tags"):
-                i._tags = list()
-            item = HealthCheckEntityModel(
-                alias=i._alias, tags=i._tags if i._tags else []
+            if not hasattr(item, "_tags"):
+                item._tags = list()
+            entity = HealthCheckEntityModel(
+                alias=item._alias, tags=item._tags if item._tags else []
             )
 
             # Track how long the entity took to respond
-            self.__startTimer__(True)
-            item.status = await i.__checkHealth__()
-            self.__stopTimer__(True)
-            item.timeTaken = self.__getTimeTaken__(True)
+            self._start_timer(True)
+            entity.status = await item.check_health()
+            self._stop_timer(True)
+            entity.timeTaken = self._get_time_taken(True)
 
-            # if we have one dependency unhealthy, the service in unhealthy
-            if item.status == HealthCheckStatusEnum.UNHEALTHY:
+            # If we have one dependency unhealthy, the service is unhealthy
+            if entity.status == HealthCheckStatusEnum.UNHEALTHY:
                 self._health.status = HealthCheckStatusEnum.UNHEALTHY
 
-            self._health.entities.append(item)
-        self.__stopTimer__(False)
-        self._health.totalTimeTaken = self.__getTimeTaken__(False)
+            self._health.entities.append(entity)
 
-        self._health = await self.__dumpModel__(self._health)
+        self._stop_timer(False)
+        self._health.totalTimeTaken = self._get_time_taken(False)
+        self._health = await self._dump_model(self._health)
 
         return self._health
 

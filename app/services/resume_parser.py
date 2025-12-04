@@ -178,9 +178,6 @@ class ResumeParser:
                 
                 {SINGLE_CALL_PROMPT}
             """
-        # Send the combination prompt to file
-        with open("combination_prompt.txt", "w") as f:
-            f.write(combination_prompt)
         message = HumanMessage(content=combination_prompt)
         response = await self.llm.ainvoke([message])
         return response.content

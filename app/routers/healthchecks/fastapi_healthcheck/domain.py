@@ -4,6 +4,8 @@ from .enum import HealthCheckStatusEnum
 
 
 class HealthCheckInterface(ABC):
+    """Abstract base class for health check implementations."""
+
     _connectionUri: str
     _alias: str
     _tags: Optional[List[str]]
@@ -25,9 +27,15 @@ class HealthCheckInterface(ABC):
 
     @abstractmethod
     def getTags(self) -> List[str]:
+        """Return list of tags associated with this health check."""
         pass
 
     @abstractmethod
-    async def __checkHealth__(self) -> HealthCheckStatusEnum:
+    async def check_health(self) -> HealthCheckStatusEnum:
         """Requests data from the endpoint to validate health."""
         pass
+
+    # Backward compatibility alias
+    async def __checkHealth__(self) -> HealthCheckStatusEnum:
+        """Deprecated: Use check_health instead."""
+        return await self.check_health()

@@ -153,7 +153,7 @@ async def validate_file_size_and_format(file: UploadFile) -> bytes:
         500: {"description": "Internal server error"},
     },
 )
-async def create_resume(resume_data: AddResume, current_user=Depends(get_current_user)) -> Any:
+async def create_resume(resume_data: AddResume, current_user: int = Depends(get_current_user)) -> Any:
     """Create a new resume in the database."""
     logger.info(
         "Attempting to add resume to the database",
@@ -203,7 +203,7 @@ async def create_resume(resume_data: AddResume, current_user=Depends(get_current
         500: {"description": "Internal server error"},
     },
 )
-async def get_resume(current_user=Depends(get_current_user)) -> Any:
+async def get_resume(current_user: int = Depends(get_current_user)) -> Any:
     """Retrieve a user's resume from the database."""
     try:
         result = await get_resume_by_user_id(current_user)
@@ -241,7 +241,7 @@ async def get_resume(current_user=Depends(get_current_user)) -> Any:
         500: {"description": "Internal server error"},
     },
 )
-async def update_user_resume(resume_data: UpdateResume, current_user=Depends(get_current_user)) -> UpdateResume:
+async def update_user_resume(resume_data: UpdateResume, current_user: int = Depends(get_current_user)) -> UpdateResume:
     """Update an existing resume."""
     try:
         result = await update_resume(resume_data, current_user)
@@ -280,7 +280,7 @@ async def update_user_resume(resume_data: UpdateResume, current_user=Depends(get
         500: {"description": "Internal server error"},
     },
 )
-async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get_current_user)) -> GetResume:
+async def pdf_to_json(pdf_file: UploadFile = File(...), current_user: int = Depends(get_current_user)) -> GetResume:
     """Convert a PDF resume to JSON."""
     pdf_bytes = await validate_file_size_and_format(pdf_file)
     resume_json = await generate_resume_json_from_pdf(pdf_bytes)
@@ -337,7 +337,7 @@ async def pdf_to_json(pdf_file: UploadFile = File(...), current_user=Depends(get
         500: {"description": "Internal server error"},
     },
 )
-async def check_resume_exists(current_user=Depends(get_current_user)) -> Any:
+async def check_resume_exists(current_user: int = Depends(get_current_user)) -> dict[str, bool]:
     """
     Check if the authenticated user has a resume.
 

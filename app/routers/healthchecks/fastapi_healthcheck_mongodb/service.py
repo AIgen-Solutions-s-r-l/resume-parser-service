@@ -1,13 +1,19 @@
 import logging
+from typing import List, Optional
+
+from pymongo import AsyncMongoClient
+from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
+
 from app.routers.healthchecks.fastapi_healthcheck.service import HealthCheckBase
 from app.routers.healthchecks.fastapi_healthcheck.enum import HealthCheckStatusEnum
 from app.routers.healthchecks.fastapi_healthcheck.domain import HealthCheckInterface
-from typing import List, Optional
-from pymongo import AsyncMongoClient
 
 logger = logging.getLogger(__name__)
 
+
 class HealthCheckMongoDB(HealthCheckBase, HealthCheckInterface):
+    """Health check implementation for MongoDB connections."""
+
     _connection_uri: str
     _message: str
 
@@ -21,12 +27,17 @@ class HealthCheckMongoDB(HealthCheckBase, HealthCheckInterface):
         self._alias = alias
         self._tags = tags
 
-    async def __checkHealth__(self) -> HealthCheckStatusEnum:
-        res: HealthCheckStatusEnum = HealthCheckStatusEnum.UNHEALTHY
+    async def check_health(self) -> HealthCheckStatusEnum:
+        """Check MongoDB connection health."""
         try:
-            client = AsyncMongoClient(self._connection_uri, serverSelectionTimeoutMS=5000)
+            client: AsyncMongoClient = AsyncMongoClient(
+                self._connection_uri,
+                serverSelectionTimeoutMS=5000
+            )
             if await client.server_info():
-                res = HealthCheckStatusEnum.HEALTHY
+                return HealthCheckStatusEnum.HEALTHY
+        except (ConnectionFailure, ServerSelectionTimeoutError) as e:
+            logger.error(f"MongoDB connection failed: {e}")
         except Exception as e:
-            logger.error(f"Mongo health check failed: {e}")
-        return res
+            logger.error(f"Unexpected error during MongoDB health check: {e}")
+        return HealthCheckStatusEnum.UNHEALTHY

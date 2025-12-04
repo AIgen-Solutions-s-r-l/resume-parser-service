@@ -1,10 +1,15 @@
-from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase, AsyncIOMotorCollection
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError
 from app.core.config import settings
 from app.core.logging_config import LogConfig
 from urllib.parse import urlparse
 
 logger = LogConfig.get_logger()
+
+# Module-level type declarations
+client: AsyncIOMotorClient
+database: AsyncIOMotorDatabase
+collection_name: AsyncIOMotorCollection
 
 def mask_mongodb_uri(uri: str) -> str:
     """Mask sensitive information in MongoDB URI for logging."""
@@ -32,7 +37,7 @@ try:
     # Parse database name from connection string, default to 'resumes' if not specified
     database_name = settings.mongodb_database
     database = client[database_name]
-    collection = database.get_collection("resumes")
+    collection_name = database.get_collection("resumes")
 
     # Verify connection is working
     client.admin.command('ping')
