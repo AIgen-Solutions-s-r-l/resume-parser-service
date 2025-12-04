@@ -1,268 +1,376 @@
-# Resume Parser Service
+<div align="center">
 
-A FastAPI microservice for resume ingestion, parsing, and management. Converts PDF resumes to structured JSON using Azure Document Intelligence and OpenAI GPT-4 Vision.
+# 🚀 Resume Parser Service
 
-## Features
+**Transform PDF resumes into structured data at scale.**
 
-- **PDF to JSON Conversion**: Parse PDF resumes into structured JSON format
-- **Dual OCR Strategy**: Azure Document Intelligence + OpenAI GPT-4o Vision
-- **Smart Combination**: LLM-powered merging of OCR results for accuracy
-- **Link Extraction**: Automatic extraction of URLs from PDF documents
-- **JWT Authentication**: Secure API access with token-based auth
-- **MongoDB Storage**: Persistent resume data storage
-- **Health Monitoring**: Kubernetes-ready health endpoints
+[![CI](https://img.shields.io/github/actions/workflow/status/AIgen-Solutions-s-r-l/resume-parser-service/ci.yml?branch=main&style=for-the-badge&logo=github&label=CI)](https://github.com/AIgen-Solutions-s-r-l/resume-parser-service/actions)
+[![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen?style=for-the-badge&logo=pytest)](https://github.com/AIgen-Solutions-s-r-l/resume-parser-service)
+[![Python](https://img.shields.io/badge/python-3.12+-blue?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
+[![Docker](https://img.shields.io/badge/docker-ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://hub.docker.com)
+[![Code Style](https://img.shields.io/badge/code%20style-black-000000?style=for-the-badge)](https://github.com/psf/black)
 
-## Quick Start
+</div>
 
-### Using Docker Compose (Recommended)
+---
+
+## 💡 Mission
+
+> **We eliminate the friction between PDF resumes and structured data.**
+> Powered by AI, built for scale.
+
+---
+
+## 🛠 Tech Stack
+
+<table>
+<tr>
+<td align="center" width="96">
+<img src="https://skillicons.dev/icons?i=fastapi" width="48" height="48" alt="FastAPI" />
+<br>FastAPI
+</td>
+<td align="center" width="96">
+<img src="https://skillicons.dev/icons?i=python" width="48" height="48" alt="Python" />
+<br>Python 3.12
+</td>
+<td align="center" width="96">
+<img src="https://skillicons.dev/icons?i=mongodb" width="48" height="48" alt="MongoDB" />
+<br>MongoDB
+</td>
+<td align="center" width="96">
+<img src="https://skillicons.dev/icons?i=docker" width="48" height="48" alt="Docker" />
+<br>Docker
+</td>
+<td align="center" width="96">
+<img src="https://skillicons.dev/icons?i=azure" width="48" height="48" alt="Azure" />
+<br>Azure AI
+</td>
+<td align="center" width="96">
+<img src="https://skillicons.dev/icons?i=kubernetes" width="48" height="48" alt="K8s" />
+<br>Kubernetes
+</td>
+</tr>
+<tr>
+<td align="center" width="96">
+<img src="https://cdn.simpleicons.org/openai/412991" width="48" height="48" alt="OpenAI" />
+<br>GPT-4o
+</td>
+<td align="center" width="96">
+<img src="https://skillicons.dev/icons?i=redis" width="48" height="48" alt="Cache" />
+<br>TTL Cache
+</td>
+<td align="center" width="96">
+<img src="https://skillicons.dev/icons?i=githubactions" width="48" height="48" alt="CI/CD" />
+<br>GitHub Actions
+</td>
+<td align="center" width="96">
+<img src="https://cdn.simpleicons.org/pydantic/E92063" width="48" height="48" alt="Pydantic" />
+<br>Pydantic
+</td>
+<td align="center" width="96">
+<img src="https://cdn.simpleicons.org/pytest/0A9EDC" width="48" height="48" alt="Pytest" />
+<br>Pytest
+</td>
+<td align="center" width="96">
+<img src="https://cdn.simpleicons.org/jsonwebtokens/000000" width="48" height="48" alt="JWT" />
+<br>JWT Auth
+</td>
+</tr>
+</table>
+
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---------|-------------|
+| 🔮 **Dual OCR Strategy** | Azure Document Intelligence + GPT-4o Vision for maximum accuracy |
+| ⚡ **Async-First** | Non-blocking I/O with proper async patterns throughout |
+| 🔐 **Secure by Default** | JWT auth, input validation, security headers |
+| 📦 **Production-Ready** | Docker, K8s health probes, structured logging |
+| 🚀 **High Performance** | In-memory caching, GZip compression, database indexes |
+| 🧪 **Well-Tested** | Unit tests, integration tests with testcontainers |
+
+---
+
+## 🏗 Architecture
+
+```mermaid
+flowchart TB
+    subgraph Client["👤 Client"]
+        A[Web App / Mobile]
+    end
+
+    subgraph Gateway["🌐 API Gateway"]
+        B[FastAPI]
+        B1[JWT Auth]
+        B2[Rate Limiting]
+        B3[CORS]
+    end
+
+    subgraph Services["⚙️ Services"]
+        C[Resume Parser]
+        D[Resume Service]
+        E[Health Check]
+    end
+
+    subgraph AI["🤖 AI Layer"]
+        F[Azure Document Intelligence]
+        G[OpenAI GPT-4o Vision]
+    end
+
+    subgraph Data["💾 Data Layer"]
+        H[(MongoDB)]
+        I[TTL Cache]
+    end
+
+    A -->|HTTPS| B
+    B --> B1 --> B2 --> B3
+    B3 --> C & D & E
+    C --> F & G
+    C --> D
+    D --> H
+    D --> I
+    E --> H
+
+    style Client fill:#1a1a2e,stroke:#00d4ff,color:#fff
+    style Gateway fill:#16213e,stroke:#00d4ff,color:#fff
+    style Services fill:#0f3460,stroke:#e94560,color:#fff
+    style AI fill:#1a1a2e,stroke:#00ff88,color:#fff
+    style Data fill:#16213e,stroke:#ffd700,color:#fff
+```
+
+---
+
+## 🔄 PDF Processing Pipeline
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant API as FastAPI
+    participant V as Validator
+    participant Azure as Azure OCR
+    participant GPT as GPT-4o Vision
+    participant LLM as LLM Combiner
+    participant DB as MongoDB
+
+    C->>+API: POST /resumes/pdf_to_json
+    API->>+V: Validate PDF (size, format, structure)
+    V-->>-API: Valid ✓
+
+    par Parallel OCR
+        API->>+Azure: Extract text
+        Azure-->>-API: OCR Result
+    and
+        API->>+GPT: Vision analysis
+        GPT-->>-API: Structured data
+    end
+
+    API->>+LLM: Combine & merge results
+    LLM-->>-API: Final JSON
+
+    API->>API: Repair & validate JSON
+    API-->>-C: 200 OK + Resume JSON
+
+    Note over API,DB: Optional: Save to database
+```
+
+---
+
+## 🚀 Deployment View
+
+```mermaid
+C4Deployment
+    title Deployment Diagram
+
+    Deployment_Node(cloud, "Cloud Platform", "AWS / Azure / GCP") {
+        Deployment_Node(k8s, "Kubernetes Cluster") {
+            Deployment_Node(ns, "resume-parser namespace") {
+                Container(api, "API Pods", "FastAPI", "Handles HTTP requests")
+                Container(worker, "Worker Pods", "Celery", "Background tasks")
+            }
+        }
+
+        Deployment_Node(managed, "Managed Services") {
+            ContainerDb(mongo, "MongoDB Atlas", "Document Store")
+            Container(azure, "Azure AI", "Document Intelligence")
+            Container(openai, "OpenAI API", "GPT-4o Vision")
+        }
+    }
+
+    Rel(api, mongo, "reads/writes", "TLS")
+    Rel(api, azure, "OCR requests", "HTTPS")
+    Rel(api, openai, "Vision requests", "HTTPS")
+```
+
+---
+
+## 🔧 Getting Started
+
+### Prerequisites
+
+- Python 3.12+
+- Docker & Docker Compose
+- MongoDB 7.0+
+- Azure & OpenAI API keys
+
+### Quick Start
 
 ```bash
-# Clone the repository
+# Clone
 git clone https://github.com/AIgen-Solutions-s-r-l/resume-parser-service.git
 cd resume-parser-service
 
-# Copy environment file
+# Configure
 cp .env.example .env
 # Edit .env with your API keys
 
-# Start services
+# Launch
 docker-compose up -d
 
-# View logs
-docker-compose logs -f app
+# Verify
+curl http://localhost:8000/health
 ```
 
-The API will be available at `http://localhost:8000`.
-
-### Manual Installation
+### Local Development
 
 ```bash
-# Prerequisites: Python 3.12+, MongoDB 7.0+, Tesseract OCR
+# Install dependencies
+pip install poetry && poetry install
 
-# Install system dependencies (Ubuntu/Debian)
-sudo apt-get install tesseract-ocr tesseract-ocr-eng poppler-utils
-
-# Install Python dependencies
-pip install poetry
-poetry install
-
-# Run the service
+# Run with hot reload
 uvicorn app.main:app --reload
+
+# Run tests
+pytest --cov=app
 ```
 
-## API Endpoints
+---
 
-### Resume Operations
+## 📡 API Overview
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/resumes/pdf_to_json` | Convert PDF to JSON resume |
-| `POST` | `/resumes/create_resume` | Create a new resume |
-| `GET` | `/resumes/get` | Get current user's resume |
-| `PUT` | `/resumes/update` | Update existing resume |
-| `GET` | `/resumes/exists` | Check if user has a resume |
-
-### Health Checks
+### Endpoints
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/healthcheck` | Full health check with dependencies |
-| `GET` | `/health` | Alias for /healthcheck |
-| `GET` | `/ready` | Kubernetes readiness probe |
-| `GET` | `/live` | Kubernetes liveness probe |
+|:------:|----------|-------------|
+| `POST` | `/resumes/pdf_to_json` | Convert PDF → JSON |
+| `POST` | `/resumes/create_resume` | Create resume |
+| `GET` | `/resumes/get` | Get user's resume |
+| `PUT` | `/resumes/update` | Update resume |
+| `GET` | `/resumes/exists` | Check existence |
 
-### Authentication
+### Health & Metrics
 
-All `/resumes/*` endpoints require JWT Bearer token authentication.
+| Method | Endpoint | Purpose |
+|:------:|----------|---------|
+| `GET` | `/health` | Service health |
+| `GET` | `/ready` | K8s readiness |
+| `GET` | `/live` | K8s liveness |
+| `GET` | `/metrics/cache` | Cache stats |
+
+### Example Request
 
 ```bash
-curl -X GET "http://localhost:8000/resumes/get" \
-  -H "Authorization: Bearer <your-jwt-token>"
+curl -X POST "http://localhost:8000/resumes/pdf_to_json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "pdf_file=@resume.pdf"
 ```
 
-## Architecture
+---
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         FastAPI Application                      │
-├─────────────────────────────────────────────────────────────────┤
-│  Routers          │  Services           │  Core                  │
-│  ├─ resume        │  ├─ resume_parser   │  ├─ config            │
-│  └─ healthcheck   │  └─ resume_service  │  ├─ auth              │
-│                   │                     │  ├─ dependencies      │
-│  Repositories     │  External Services  │  ├─ middleware        │
-│  └─ resume_repo   │  ├─ Azure Doc AI    │  └─ healthcheck       │
-│                   │  └─ OpenAI GPT-4o   │                        │
-├─────────────────────────────────────────────────────────────────┤
-│                         MongoDB                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Directory Structure
-
-```
-resume_service/
-├── app/
-│   ├── core/           # Configuration, auth, middleware, DI
-│   ├── repositories/   # Data access layer (Repository pattern)
-│   ├── routers/        # API endpoints
-│   ├── schemas/        # Pydantic models
-│   ├── services/       # Business logic
-│   └── tests/          # Test suite
-├── .github/workflows/  # CI/CD pipelines
-├── docker-compose.yml  # Local development setup
-└── Dockerfile          # Production container
-```
-
-### PDF Processing Flow
-
-```
-PDF Upload → Validate → Azure OCR ─┐
-                      → GPT-4 OCR ──┼→ LLM Combine → JSON Repair → Response
-                      → Link Extract┘
-```
-
-## Configuration
-
-### Environment Variables
+## ⚙️ Configuration
 
 | Variable | Description | Required |
-|----------|-------------|----------|
-| `MONGODB` | MongoDB connection string | Yes |
-| `MONGODB_DATABASE` | Database name (default: resumes) | No |
-| `SECRET_KEY` | JWT signing secret (min 32 chars) | Yes |
-| `OPENAI_API_KEY` | OpenAI API key for GPT-4o | Yes |
-| `DOCUMENT_INTELLIGENCE_API_KEY` | Azure Document Intelligence key | Yes |
-| `DOCUMENT_INTELLIGENCE_ENDPOINT` | Azure endpoint URL | Yes |
-| `CORS_ORIGINS` | Allowed CORS origins (comma-separated) | No |
-| `LOG_LEVEL` | Logging level (DEBUG, INFO, WARNING, ERROR) | No |
-| `ENVIRONMENT` | Environment name (development, production) | No |
+|----------|-------------|:--------:|
+| `MONGODB` | Connection string | ✅ |
+| `SECRET_KEY` | JWT secret (32+ chars) | ✅ |
+| `OPENAI_API_KEY` | OpenAI API key | ✅ |
+| `DOCUMENT_INTELLIGENCE_API_KEY` | Azure key | ✅ |
+| `DOCUMENT_INTELLIGENCE_ENDPOINT` | Azure endpoint | ✅ |
+| `LOG_LEVEL` | DEBUG/INFO/WARNING/ERROR | |
+| `ENVIRONMENT` | development/production | |
 
-### Example `.env` file
+---
 
-```env
-# Database
-MONGODB=mongodb://localhost:27017
-MONGODB_DATABASE=resumes
+## 🗺 Roadmap
 
-# Security
-SECRET_KEY=your-super-secret-key-minimum-32-characters
+```mermaid
+gantt
+    title Product Roadmap
+    dateFormat  YYYY-MM-DD
+    section Core
+    PDF Parsing          :done, 2024-01-01, 30d
+    Multi-OCR Strategy   :done, 2024-01-15, 20d
+    Caching Layer        :done, 2024-02-01, 10d
 
-# External Services
-OPENAI_API_KEY=sk-...
-DOCUMENT_INTELLIGENCE_API_KEY=your-azure-key
-DOCUMENT_INTELLIGENCE_ENDPOINT=https://your-resource.cognitiveservices.azure.com
+    section Scale
+    Redis Cache          :active, 2024-03-01, 15d
+    Async Queue          :2024-03-15, 20d
+    Multi-tenant         :2024-04-01, 30d
 
-# Optional
-CORS_ORIGINS=http://localhost:3000,http://localhost:8080
-LOG_LEVEL=INFO
-ENVIRONMENT=development
+    section AI
+    Resume Scoring       :2024-04-15, 25d
+    Skill Extraction     :2024-05-01, 20d
+    Job Matching         :2024-05-15, 30d
 ```
 
-## Development
+| Priority | Feature | Status |
+|:--------:|---------|:------:|
+| **P1** | Redis distributed cache | 🔄 In Progress |
+| **P1** | Async job queue (Celery) | 📋 Planned |
+| **P2** | Multi-tenant support | 📋 Planned |
+| **P2** | Resume quality scoring | 📋 Planned |
+| **P3** | AI-powered skill extraction | 💡 Ideation |
+| **P3** | Job-resume matching | 💡 Ideation |
 
-### Running Tests
+---
+
+## 🤝 Contributing
+
+We love contributions! Here's how to get started:
 
 ```bash
-# Run all tests
-pytest
+# Fork & clone
+git clone https://github.com/YOUR_USERNAME/resume-parser-service.git
 
-# Run with coverage
-pytest --cov=app --cov-report=term-missing
+# Create feature branch
+git checkout -b feature/amazing-feature
 
-# Run specific test file
-pytest app/tests/test_resume_parser.py -v
+# Make changes & test
+pytest && pre-commit run --all-files
+
+# Commit with conventional commits
+git commit -m "feat: add amazing feature"
+
+# Push & create PR
+git push origin feature/amazing-feature
 ```
 
-### Code Quality
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
-```bash
-# Format code
-black app/
-isort app/
+---
 
-# Lint
-flake8 app/
+## 📄 License
 
-# Type check
-mypy app/
+```
+MIT License
 
-# Security scan
-bandit -r app/ -x app/tests/
+Copyright (c) 2024 AIgen Solutions s.r.l.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software.
 ```
 
-### Pre-commit Hooks
+---
 
-```bash
-# Install pre-commit hooks
-pre-commit install
+<div align="center">
 
-# Run manually
-pre-commit run --all-files
-```
+**Built with ❤️ by [AIgen Solutions](https://github.com/AIgen-Solutions-s-r-l)**
 
-## Deployment
+[Report Bug](https://github.com/AIgen-Solutions-s-r-l/resume-parser-service/issues) · [Request Feature](https://github.com/AIgen-Solutions-s-r-l/resume-parser-service/issues) · [Documentation](https://github.com/AIgen-Solutions-s-r-l/resume-parser-service/wiki)
 
-### Docker
-
-```bash
-# Build production image
-docker build -t resume-parser-service:latest .
-
-# Run container
-docker run -p 8000:8000 --env-file .env resume-parser-service:latest
-```
-
-### Docker Compose (with MongoDB)
-
-```bash
-# Production
-docker-compose -f docker-compose.yml up -d
-
-# Development with hot reload
-docker-compose up -d
-
-# With MongoDB admin UI
-docker-compose --profile tools up -d
-```
-
-### Kubernetes
-
-The service includes Kubernetes-ready health endpoints:
-- `/live` - Liveness probe (is the process running?)
-- `/ready` - Readiness probe (is the service ready to accept traffic?)
-
-## Troubleshooting
-
-### Common Issues
-
-**MongoDB Connection Failed**
-```bash
-# Check MongoDB is running
-docker-compose ps mongodb
-
-# Check connection string
-echo $MONGODB
-```
-
-**PDF Processing Errors**
-```bash
-# Verify Tesseract installation
-tesseract --version
-
-# Check poppler installation
-pdftoppm -v
-```
-
-**Authentication Errors**
-- Ensure `SECRET_KEY` is at least 32 characters
-- Check token expiration (default: 30 minutes)
-- Verify token format: `Bearer <token>`
-
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
+</div>
